@@ -4,7 +4,7 @@ import pandas as pd
 import pytest
 
 from main import run
-from src.data import add_name_parts, feature_columns, load_data
+from src.data import add_name_parts, attach_features, check_feature_table, feature_columns, load_data
 from src.validation import make_folds
 
 N_VARIANTS = 5
@@ -22,6 +22,8 @@ def config(tmp_path):
     """Записывает корректные файлы данных и возвращает конфигурацию для них."""
     make_labels(range(30)).to_csv(tmp_path / "train.csv", index=False)
     make_labels(range(100, 104), 0).to_csv(tmp_path / "sample_submission.csv", index=False)
+    names = pd.concat([make_labels(range(30)), make_labels(range(100, 104), 0)])["img_name"]
+    pd.DataFrame({"img_name": names, "blur": 1.0}).to_csv(tmp_path / "features.csv", index=False)
     return {
         "data": {
             "dir": tmp_path,
@@ -30,6 +32,7 @@ def config(tmp_path):
             "id_column": "img_name",
             "target": "PSNR",
         },
+        "features": {"table": tmp_path / "features.csv", "recompute": False, "images_dir": tmp_path},
         "validation": {"n_splits": 3, "n_bins": 5, "seed": 42},
         "models": {
             "mean": {"type": "dummy", "params": {"strategy": "mean"}},
@@ -77,6 +80,26 @@ def test_load_data_rejects_shared_sources(config):
 def test_feature_columns_exclude_name_and_service_columns(config):
     train, _ = load_data(config["data"])
     assert feature_columns(train.assign(blur=0.0), "img_name", "PSNR") == ["blur"]
+
+
+def test_check_feature_table_rejects_missing_image():
+    table = pd.DataFrame({"img_name": ["a_1.png"], "blur": [1.0]})
+    with pytest.raises(ValueError, match="нет 1 изображений"):
+        check_feature_table(table, ["a_1.png", "a_2.png"], "img_name")
+
+
+def test_check_feature_table_rejects_missing_value():
+    table = pd.DataFrame({"img_name": ["a_1.png"], "blur": [np.nan]})
+    with pytest.raises(ValueError, match="пропуски"):
+        check_feature_table(table, ["a_1.png"], "img_name")
+
+
+def test_attach_features_keeps_row_order():
+    frame = pd.DataFrame({"img_name": ["b_1.png", "a_1.png"], "PSNR": [1.0, 2.0]})
+    table = pd.DataFrame({"img_name": ["a_1.png", "b_1.png"], "blur": [20.0, 10.0]})
+    attached = attach_features(frame, table, "img_name")
+    assert attached["img_name"].tolist() == ["b_1.png", "a_1.png"]
+    assert attached["blur"].tolist() == [10.0, 20.0]
 
 
 def test_folds_keep_each_source_in_one_part_and_cover_all_rows(config):

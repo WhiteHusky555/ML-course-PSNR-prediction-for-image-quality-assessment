@@ -5,6 +5,11 @@ data:
   id_column: img_name
   target: PSNR
 
+features:
+  table: features/features.csv.gz
+  recompute: false
+  images_dir: data
+
 validation:
   n_splits: 5
   n_bins: 10

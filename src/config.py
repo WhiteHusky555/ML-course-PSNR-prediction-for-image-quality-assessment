@@ -3,7 +3,7 @@ from pathlib import Path
 
 import yaml
 
-REQUIRED_SECTIONS = ("data", "validation", "models", "output")
+REQUIRED_SECTIONS = ("data", "features", "validation", "models", "output")
 
 
 def load_config(path):

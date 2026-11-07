@@ -61,6 +61,22 @@ def load_data(data_config):
     return train, test
 
 
+def check_feature_table(table, names, id_column):
+    """Проверяет, что таблица описывает все изображения и содержит только конечные значения."""
+    check_columns(table, [id_column], "признаков")
+    missing = set(names) - set(table[id_column])
+    if missing:
+        raise ValueError(f"В таблице признаков нет {len(missing)} изображений: {sorted(missing)[:5]}")
+    values = table.drop(columns=id_column).to_numpy(dtype=np.float64)
+    if not np.isfinite(values).all():
+        raise ValueError("Таблица признаков содержит пропуски или бесконечные значения")
+
+
+def attach_features(frame, table, id_column):
+    """Добавляет признаки к таблице меток, сохраняя порядок её строк."""
+    return frame.merge(table, on=id_column, how="left", validate="one_to_one")
+
+
 def feature_columns(train, id_column, target):
     """Возвращает столбцы, которые подаются на вход модели."""
     excluded = {id_column, target, *SERVICE_COLUMNS}

@@ -5,9 +5,25 @@ from pathlib import Path
 import pandas as pd
 
 from src.config import load_config
-from src.data import feature_columns, load_data
+from src.data import attach_features, check_feature_table, feature_columns, load_data
+from src.features import extract_features
 from src.models import build_model
 from src.validation import cross_validate, make_folds
+
+FEATURE_FLOAT_FORMAT = "%.7g"
+
+
+def prepare_feature_table(features_config, names, id_column):
+    """Читает готовую таблицу признаков или пересчитывает её по изображениям."""
+    path = Path(features_config["table"])
+    if features_config["recompute"]:
+        table = extract_features(names, features_config["images_dir"], id_column)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        table.to_csv(path, index=False, float_format=FEATURE_FLOAT_FORMAT)
+    else:
+        table = pd.read_csv(path)
+    check_feature_table(table, names, id_column)
+    return table
 
 
 def evaluate_models(config, train, columns, target):
@@ -27,6 +43,10 @@ def run(config):
     id_column = config["data"]["id_column"]
     target = config["data"]["target"]
     train, test = load_data(config["data"])
+    names = pd.concat([train[id_column], test[id_column]], ignore_index=True)
+    table = prepare_feature_table(config["features"], names, id_column)
+    train = attach_features(train, table, id_column)
+    test = attach_features(test, table, id_column)
     columns = feature_columns(train, id_column, target)
 
     results = evaluate_models(config, train, columns, target)
