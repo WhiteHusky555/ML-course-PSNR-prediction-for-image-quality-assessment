@@ -1,0 +1,12 @@
+data/
+outputs/
+catboost_info/
+
+__pycache__/
+*.pyc
+.pytest_cache/
+.ipynb_checkpoints/
+
+.venv/
+venv/
+.env*
