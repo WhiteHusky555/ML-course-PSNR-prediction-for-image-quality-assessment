@@ -1,0 +1,20 @@
+data:
+  dir: data
+  train_file: train.csv
+  test_file: sample_submission.csv
+  id_column: img_name
+  target: PSNR
+
+validation:
+  n_splits: 5
+  n_bins: 10
+  seed: 42
+
+models:
+  median:
+    type: dummy
+    params:
+      strategy: median
+
+output:
+  dir: outputs
