@@ -123,3 +123,20 @@ def test_run_saves_results_and_submission_of_best_model(config):
     assert saved["img_name"].tolist() == expected_names.tolist()
     assert saved["PSNR"].to_numpy() == pytest.approx(train["PSNR"].mean())
     assert (output_dir / "results.csv").exists()
+
+
+def test_run_evaluates_each_grid_point_and_submits_best(config):
+    table = pd.read_csv(config["features"]["table"])
+    table["blur"] = np.arange(len(table), dtype=float)
+    table.to_csv(config["features"]["table"], index=False)
+    config["models"] = {
+        "median": {"type": "dummy", "params": {"strategy": "median"}},
+        "ridge": {"type": "ridge", "scaler": "standard", "grid": {"alpha": [0.01, 1000.0]}},
+    }
+
+    results = run(config)
+    saved = pd.read_csv(config["output"]["dir"] / "submission.csv")
+
+    assert results["model"].tolist() == ["ridge alpha=0.01", "ridge alpha=1000.0", "median"]
+    assert results.loc[0, "mae"] < 0.01
+    assert saved["PSNR"].nunique() == len(saved)
