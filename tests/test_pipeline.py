@@ -110,6 +110,14 @@ def test_folds_keep_each_source_in_one_part_and_cover_all_rows(config):
     assert sorted(np.concatenate([valid_idx for _, valid_idx in folds])) == list(range(len(train)))
 
 
+def test_folds_without_grouping_split_sources(config):
+    train, _ = load_data(config["data"])
+    folds = make_folds(train, "PSNR", 3, 5, 42, group=False)
+    shared = [set(train["source"].iloc[t]) & set(train["source"].iloc[v]) for t, v in folds]
+    assert any(shared)
+    assert sorted(np.concatenate([valid_idx for _, valid_idx in folds])) == list(range(len(train)))
+
+
 def test_run_saves_results_and_submission_of_best_model(config):
     results = run(config)
     train = pd.read_csv(config["data"]["dir"] / "train.csv")

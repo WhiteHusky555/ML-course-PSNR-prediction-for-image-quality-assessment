@@ -22,14 +22,17 @@ models:
       strategy: median
   linear:
     type: linear
+    clip: [0.001, 0.999]
     scaler: standard
   ridge:
     type: ridge
+    clip: [0.001, 0.999]
     scaler: standard
     grid:
       alpha: [0.01, 0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0]
   lasso:
     type: lasso
+    clip: [0.001, 0.999]
     scaler: standard
     params:
       max_iter: 1000000
@@ -38,6 +41,7 @@ models:
       alpha: [0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1, 0.3]
   elasticnet:
     type: elasticnet
+    clip: [0.001, 0.999]
     scaler: standard
     params:
       max_iter: 1000000

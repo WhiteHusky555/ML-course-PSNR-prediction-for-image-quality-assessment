@@ -2,16 +2,19 @@
 import numpy as np
 import pandas as pd
 from sklearn.metrics import mean_absolute_error
-from sklearn.model_selection import StratifiedGroupKFold
+from sklearn.model_selection import StratifiedGroupKFold, StratifiedKFold
 
 
-def make_folds(train, target, n_splits, n_bins, seed):
+def make_folds(train, target, n_splits, n_bins, seed, group=True):
     """Возвращает разбиения со стратификацией по бинам цели и группировкой по исходнику.
 
     Варианты одного исходника похожи между собой, а в test исходники из train не встречаются.
-    Поэтому все варианты исходника должны попадать в один фолд.
+    Поэтому все варианты исходника должны попадать в один фолд. Разбиение без группировки
+    (group=False) нужно только для сравнения: оно завышает качество моделей.
     """
     bins = pd.qcut(train[target], n_bins, labels=False, duplicates="drop")
+    if not group:
+        return list(StratifiedKFold(n_splits, shuffle=True, random_state=seed).split(train, bins))
     splitter = StratifiedGroupKFold(n_splits, shuffle=True, random_state=seed)
     return list(splitter.split(train, bins, train["source"]))
 

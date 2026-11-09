@@ -1,0 +1,44 @@
+data:
+  dir: data
+  train_file: train.csv
+  test_file: sample_submission.csv
+  id_column: img_name
+  target: PSNR
+
+features:
+  table: features/features.csv.gz
+  recompute: false
+  images_dir: data
+
+validation:
+  n_splits: 5
+  n_bins: 10
+  seed: 42
+
+models:
+  no_variant:
+    type: ridge
+    scaler: standard
+    grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+  onehot:
+    type: ridge
+    scaler: standard
+    variant: onehot
+    grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+  ordinal:
+    type: ridge
+    scaler: standard
+    variant: ordinal
+    grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+  target:
+    type: ridge
+    scaler: standard
+    variant: target
+    grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+
+output:
+  dir: outputs/categorical

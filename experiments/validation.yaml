@@ -1,0 +1,34 @@
+data:
+  dir: data
+  train_file: train.csv
+  test_file: sample_submission.csv
+  id_column: img_name
+  target: PSNR
+
+features:
+  table: features/features.csv.gz
+  recompute: false
+  images_dir: data
+
+validation:
+  n_splits: 5
+  n_bins: 10
+  seed: 42
+  group: false
+
+models:
+  median:
+    type: dummy
+    params:
+      strategy: median
+  linear:
+    type: linear
+    scaler: standard
+  ridge:
+    type: ridge
+    scaler: standard
+    params:
+      alpha: 1.0
+
+output:
+  dir: outputs/validation

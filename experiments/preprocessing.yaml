@@ -1,0 +1,93 @@
+data:
+  dir: data
+  train_file: train.csv
+  test_file: sample_submission.csv
+  id_column: img_name
+  target: PSNR
+
+features:
+  table: features/features.csv.gz
+  recompute: false
+  images_dir: data
+
+validation:
+  n_splits: 5
+  n_bins: 10
+  seed: 42
+
+models:
+  median:
+    type: dummy
+    params:
+      strategy: median
+  raw:
+    type: ridge
+    grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+  standard:
+    type: ridge
+    scaler: standard
+    grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+  robust:
+    type: ridge
+    scaler: robust
+    grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+  quantile:
+    type: ridge
+    scaler: quantile
+    grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+  clip_1:
+    type: ridge
+    clip: [0.01, 0.99]
+    scaler: standard
+    grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+  clip_01:
+    type: ridge
+    clip: [0.001, 0.999]
+    scaler: standard
+    grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+  select_99:
+    type: ridge
+    select: 0.99
+    scaler: standard
+    grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+  select_95:
+    type: ridge
+    select: 0.95
+    scaler: standard
+    grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+  select_90:
+    type: ridge
+    select: 0.9
+    scaler: standard
+    grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+  pca_99:
+    type: ridge
+    scaler: standard
+    pca: 0.99
+    grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+  pca_95:
+    type: ridge
+    scaler: standard
+    pca: 0.95
+    grid:
+      alpha: [0.1, 1.0, 10.0, 100.0]
+  linear_standard:
+    type: linear
+    scaler: standard
+  linear_select_95:
+    type: linear
+    select: 0.95
+    scaler: standard
+
+output:
+  dir: outputs/preprocessing

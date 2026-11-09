@@ -1,7 +1,10 @@
 """Проверки создания моделей и развёртывания сеток параметров."""
+from pathlib import Path
+
 import numpy as np
 import pytest
 
+from src.config import load_config
 from src.models import build_model, expand_grid
 
 
@@ -49,4 +52,12 @@ def test_scaled_model_does_not_depend_on_feature_units():
 ])
 def test_build_model_rejects_unknown_names(spec, message):
     with pytest.raises(ValueError, match=message):
+        build_model(spec)
+
+
+@pytest.mark.parametrize("path", ["config.yaml", *sorted(str(p) for p in Path("experiments").glob("*.yaml"))])
+def test_every_configured_model_can_be_built(path):
+    models = expand_grid(load_config(path)["models"])
+    assert models
+    for spec in models.values():
         build_model(spec)

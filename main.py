@@ -7,7 +7,7 @@ import pandas as pd
 from src.config import load_config
 from src.data import attach_features, check_feature_table, feature_columns, load_data
 from src.features import extract_features
-from src.models import build_model, expand_grid
+from src.models import build_model, expand_grid, model_columns
 from src.validation import cross_validate, make_folds
 
 FEATURE_FLOAT_FORMAT = "%.7g"
@@ -29,10 +29,11 @@ def prepare_feature_table(features_config, names, id_column):
 def evaluate_models(models, config, train, columns, target):
     """Оценивает модели на общих фолдах и возвращает таблицу по возрастанию MAE."""
     validation = config["validation"]
-    folds = make_folds(train, target, validation["n_splits"], validation["n_bins"], validation["seed"])
+    folds = make_folds(train, target, validation["n_splits"], validation["n_bins"], validation["seed"],
+                       validation.get("group", True))
     rows = []
     for name, spec in models.items():
-        scores = cross_validate(lambda: build_model(spec), train, columns, folds, target)
+        scores = cross_validate(lambda: build_model(spec), train, model_columns(spec, columns), folds, target)
         print(f"{name}: MAE {scores['mae']:.4f}", flush=True)
         by_variant = {f"mae_{variant}": mae for variant, mae in scores["mae_by_variant"].items()}
         rows.append({"model": name, "mae": scores["mae"], "fold_std": scores["fold_std"], **by_variant})
@@ -52,8 +53,10 @@ def run(config):
 
     models = expand_grid(config["models"])
     results = evaluate_models(models, config, train, columns, target)
-    best_model = build_model(models[results.loc[0, "model"]]).fit(train[columns], train[target])
-    submission = test[[id_column]].assign(**{target: best_model.predict(test[columns])})
+    best_spec = models[results.loc[0, "model"]]
+    best_columns = model_columns(best_spec, columns)
+    best_model = build_model(best_spec).fit(train[best_columns], train[target])
+    submission = test[[id_column]].assign(**{target: best_model.predict(test[best_columns])})
 
     output_dir = Path(config["output"]["dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
