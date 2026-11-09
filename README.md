@@ -1,5 +1,12 @@
 # ML-course-PSNR-prediction-for-image-quality-assessment
 
+[![tests](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/actions/workflows/tests.yml/badge.svg)](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/actions/workflows/tests.yml)
+[![Python](https://img.shields.io/badge/python-3.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.6-F7931E?logo=scikitlearn&logoColor=white)](https://scikit-learn.org/)
+[![OpenCV](https://img.shields.io/badge/OpenCV-4.14-5C3EE8?logo=opencv&logoColor=white)](https://opencv.org/)
+[![Kaggle](https://img.shields.io/badge/Kaggle-psnr--iqa-20BEFF?logo=kaggle&logoColor=white)](https://www.kaggle.com/competitions/psnr-iqa)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 Курсовой проект по основам машинного обучения на материале соревнования Kaggle [PSNR prediction for image quality assessment](https://www.kaggle.com/competitions/psnr-iqa).
 
 ## Задача
@@ -165,7 +172,7 @@ pip install notebook
 jupyter nbconvert --to notebook --execute --inplace eda.ipynb
 ```
 
-Запуск тестов:
+Тесты запускаются в GitHub Actions при каждом push в `main` и в pull request. Локальный запуск:
 
 ```bash
 python -m pytest
