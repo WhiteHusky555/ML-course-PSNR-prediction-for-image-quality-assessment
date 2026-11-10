@@ -29,6 +29,30 @@ models:
     scaler: standard
     params:
       alpha: 1.0
+  knn:
+    type: knn
+    clip: [0.001, 0.999]
+    scaler: standard
+    grid:
+      n_neighbors: [3, 5, 10, 20, 50, 100]
+      weights: [uniform, distance]
+      metric: [euclidean, manhattan]
+  tree:
+    type: tree
+    params:
+      random_state: 0
+    grid:
+      max_depth: [3, 5, 10, 20, null]
+      min_samples_leaf: [1, 5, 20, 100]
+  forest:
+    type: forest
+    params:
+      n_estimators: 300
+      max_features: 0.33
+      n_jobs: -1
+      random_state: 0
+    grid:
+      min_samples_leaf: [1, 3, 10]
 
 output:
   dir: outputs/validation

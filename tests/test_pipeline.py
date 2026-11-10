@@ -148,3 +148,16 @@ def test_run_evaluates_each_grid_point_and_submits_best(config):
     assert results["model"].tolist() == ["ridge alpha=0.01", "ridge alpha=1000.0", "median"]
     assert results.loc[0, "mae"] < 0.01
     assert saved["PSNR"].nunique() == len(saved)
+
+
+def test_results_show_overfitting_of_nearest_neighbour(config):
+    rng = np.random.default_rng(0)
+    table = pd.read_csv(config["features"]["table"])
+    table["blur"] = rng.normal(size=len(table))
+    table.to_csv(config["features"]["table"], index=False)
+    config["models"] = {"knn": {"type": "knn", "params": {"n_neighbors": 1}}}
+
+    results = run(config)
+
+    assert results.loc[0, "train_mae"] == 0
+    assert results.loc[0, "mae"] > 1

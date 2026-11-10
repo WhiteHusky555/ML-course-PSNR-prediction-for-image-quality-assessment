@@ -4,10 +4,13 @@ from itertools import product
 from sklearn.compose import make_column_transformer
 from sklearn.decomposition import PCA
 from sklearn.dummy import DummyRegressor
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import ElasticNet, Lasso, LinearRegression, Ridge
+from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import (OneHotEncoder, OrdinalEncoder, QuantileTransformer, RobustScaler,
                                    StandardScaler, TargetEncoder)
+from sklearn.tree import DecisionTreeRegressor
 
 from src.preprocessing import CorrelationFilter, QuantileClipper
 
@@ -17,6 +20,9 @@ MODEL_TYPES = {
     "ridge": Ridge,
     "lasso": Lasso,
     "elasticnet": ElasticNet,
+    "knn": KNeighborsRegressor,
+    "tree": DecisionTreeRegressor,
+    "forest": RandomForestRegressor,
 }
 SCALERS = {
     "standard": StandardScaler,

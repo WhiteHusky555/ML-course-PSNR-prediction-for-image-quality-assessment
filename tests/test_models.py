@@ -46,6 +46,18 @@ def test_scaled_model_does_not_depend_on_feature_units():
         build_model(spec).fit(rescaled, target).predict(rescaled))
 
 
+@pytest.mark.parametrize("spec", [
+    {"type": "knn", "scaler": "standard", "params": {"n_neighbors": 3, "weights": "distance"}},
+    {"type": "tree", "params": {"max_depth": None, "random_state": 0}},
+    {"type": "forest", "params": {"n_estimators": 10, "random_state": 0}},
+])
+def test_nonlinear_models_fit_step_function(spec):
+    features = np.linspace(0, 1, 200).reshape(-1, 1)
+    target = (features[:, 0] > 0.5).astype(float)
+    predicted = build_model(spec).fit(features, target).predict([[0.1], [0.9]])
+    assert predicted == pytest.approx([0.0, 1.0])
+
+
 @pytest.mark.parametrize(("spec", "message"), [
     ({"type": "svm"}, "Неизвестный тип модели"),
     ({"type": "ridge", "scaler": "minmax"}, "Неизвестный способ масштабирования"),
