@@ -1,16 +1,19 @@
 """Создание моделей по описанию из конфигурации."""
 from itertools import product
 
-from sklearn.compose import make_column_transformer
+from catboost import CatBoostRegressor
+from lightgbm import LGBMRegressor
+from sklearn.compose import TransformedTargetRegressor, make_column_transformer
 from sklearn.decomposition import PCA
 from sklearn.dummy import DummyRegressor
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import GradientBoostingRegressor, HistGradientBoostingRegressor, RandomForestRegressor
 from sklearn.linear_model import ElasticNet, Lasso, LinearRegression, Ridge
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import (OneHotEncoder, OrdinalEncoder, QuantileTransformer, RobustScaler,
                                    StandardScaler, TargetEncoder)
 from sklearn.tree import DecisionTreeRegressor
+from xgboost import XGBRegressor
 
 from src.preprocessing import CorrelationFilter, QuantileClipper
 
@@ -23,6 +26,11 @@ MODEL_TYPES = {
     "knn": KNeighborsRegressor,
     "tree": DecisionTreeRegressor,
     "forest": RandomForestRegressor,
+    "gradboost": GradientBoostingRegressor,
+    "histgb": HistGradientBoostingRegressor,
+    "lightgbm": LGBMRegressor,
+    "xgboost": XGBRegressor,
+    "catboost": CatBoostRegressor,
 }
 SCALERS = {
     "standard": StandardScaler,
@@ -69,8 +77,14 @@ def build_model(spec):
     (квантили, корреляции, масштаб, главные компоненты, кодировка), обучается только на обучающей
     части фолда. При заданном variant номер варианта кодируется и подаётся на вход модели; это
     используется только в исследовании кодирования категориальных признаков.
+
+    При center_target из целевой переменной вычитается её среднее по обучающей части, а к прогнозу
+    оно прибавляется обратно. Это нужно функциям потерь Huber в XGBoost и CatBoost: они начинают
+    с нулевого прогноза, а ограниченный градиент не позволяет дойти до значений PSNR около 28 дБ.
     """
     model = choose(MODEL_TYPES, spec["type"], "тип модели")(**spec.get("params", {}))
+    if spec.get("center_target"):
+        model = TransformedTargetRegressor(model, transformer=StandardScaler(with_std=False))
     steps = preprocessing_steps(spec)
     if "variant" in spec:
         encoder = choose(ENCODERS, spec["variant"], "способ кодирования")()

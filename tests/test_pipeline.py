@@ -5,7 +5,8 @@ import pytest
 
 from main import run
 from src.data import add_name_parts, attach_features, check_feature_table, feature_columns, load_data
-from src.validation import make_folds
+from src.models import build_model
+from src.validation import cross_validate, make_folds
 
 N_VARIANTS = 5
 
@@ -161,3 +162,13 @@ def test_results_show_overfitting_of_nearest_neighbour(config):
 
     assert results.loc[0, "train_mae"] == 0
     assert results.loc[0, "mae"] > 1
+
+
+def test_parallel_folds_give_same_scores(config):
+    train, _ = load_data(config["data"])
+    train = train.assign(blur=np.random.default_rng(0).normal(size=len(train)))
+    folds = make_folds(train, "PSNR", 3, 5, 42)
+    spec = {"type": "gradboost", "params": {"n_estimators": 20, "random_state": 0}}
+    sequential = cross_validate(lambda: build_model(spec), train, ["blur"], folds, "PSNR")
+    parallel = cross_validate(lambda: build_model(spec), train, ["blur"], folds, "PSNR", n_jobs=2)
+    assert parallel == sequential

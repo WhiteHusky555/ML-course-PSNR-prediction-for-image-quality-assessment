@@ -33,7 +33,8 @@ def evaluate_models(models, config, train, columns, target):
                        validation.get("group", True))
     rows = []
     for name, spec in models.items():
-        scores = cross_validate(lambda: build_model(spec), train, model_columns(spec, columns), folds, target)
+        scores = cross_validate(lambda: build_model(spec), train, model_columns(spec, columns), folds, target,
+                                spec.get("fold_jobs", 1))
         print(f"{name}: MAE {scores['mae']:.4f}", flush=True)
         by_variant = {f"mae_{variant}": mae for variant, mae in scores["mae_by_variant"].items()}
         rows.append({"model": name, "mae": scores["mae"], "fold_std": scores["fold_std"],

@@ -2,6 +2,7 @@
 from pathlib import Path
 
 import numpy as np
+import pandas as pd
 import pytest
 
 from src.config import load_config
@@ -56,6 +57,35 @@ def test_nonlinear_models_fit_step_function(spec):
     target = (features[:, 0] > 0.5).astype(float)
     predicted = build_model(spec).fit(features, target).predict([[0.1], [0.9]])
     assert predicted == pytest.approx([0.0, 1.0])
+
+
+@pytest.mark.parametrize("spec", [
+    {"type": "lightgbm", "params": {"n_estimators": 100, "objective": "l1", "verbose": -1}},
+    {"type": "xgboost", "params": {"n_estimators": 100, "objective": "reg:absoluteerror"}},
+    {"type": "catboost", "params": {"iterations": 100, "loss_function": "MAE", "verbose": 0,
+                                    "allow_writing_files": False}},
+    {"type": "gradboost", "params": {"n_estimators": 100, "loss": "absolute_error"}},
+    {"type": "histgb", "params": {"max_iter": 100, "loss": "absolute_error", "min_samples_leaf": 5}},
+])
+def test_boosting_models_fit_step_function(spec):
+    features = pd.DataFrame({"x": np.linspace(0, 1, 200)})
+    target = (features["x"] > 0.5).astype(float)
+    predicted = build_model(spec).fit(features, target).predict(pd.DataFrame({"x": [0.1, 0.9]}))
+    assert predicted == pytest.approx([0.0, 1.0], abs=0.05)
+
+
+@pytest.mark.parametrize("spec", [
+    {"type": "xgboost", "params": {"n_estimators": 100, "objective": "reg:pseudohubererror"}},
+    {"type": "catboost", "params": {"iterations": 100, "loss_function": "Huber:delta=1.0", "verbose": 0,
+                                    "allow_writing_files": False}},
+])
+def test_centered_target_lets_huber_reach_large_values(spec):
+    features = np.linspace(0, 1, 200).reshape(-1, 1)
+    target = 28 + (features[:, 0] > 0.5)
+    centered = {**spec, "center_target": True}
+    predicted = build_model(centered).fit(features, target).predict(np.array([[0.1], [0.9]]))
+    assert predicted == pytest.approx([28.0, 29.0], abs=0.1)
+    assert abs(build_model(spec).fit(features, target).predict(np.array([[0.1]]))[0] - 28) > 0.5
 
 
 @pytest.mark.parametrize(("spec", "message"), [

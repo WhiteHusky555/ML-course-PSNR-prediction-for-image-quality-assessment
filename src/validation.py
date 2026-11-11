@@ -1,6 +1,7 @@
 """Разбиение данных на фолды и оценка моделей по кросс-валидации."""
 import numpy as np
 import pandas as pd
+from joblib import Parallel, delayed
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import StratifiedGroupKFold, StratifiedKFold
 
@@ -19,25 +20,31 @@ def make_folds(train, target, n_splits, n_bins, seed, group=True):
     return list(splitter.split(train, bins, train["source"]))
 
 
-def cross_validate(build_model, train, columns, folds, target):
+def fit_fold(build_model, train, columns, target, train_idx, valid_idx):
+    """Обучает модель на обучающей части фолда; возвращает прогноз проверочной части и MAE на обучении."""
+    part = train.iloc[train_idx]
+    model = build_model().fit(part[columns], part[target])
+    train_mae = mean_absolute_error(part[target], model.predict(part[columns]))
+    return model.predict(train.iloc[valid_idx][columns]), train_mae
+
+
+def cross_validate(build_model, train, columns, folds, target, n_jobs=1):
     """Считает MAE по out-of-fold предсказаниям, в целом и по типам искажений.
 
     train_mae — средняя по фолдам ошибка на обучающей части; разница с mae показывает переобучение.
+    При n_jobs > 1 фолды обучаются параллельно; это нужно однопоточным моделям, результат не меняется.
     """
+    fitted = Parallel(n_jobs)(delayed(fit_fold)(build_model, train, columns, target, train_idx, valid_idx)
+                              for train_idx, valid_idx in folds)
     predictions = np.zeros(len(train))
     fold_scores = []
-    train_scores = []
-    for train_idx, valid_idx in folds:
-        part = train.iloc[train_idx]
-        valid = train.iloc[valid_idx]
-        model = build_model().fit(part[columns], part[target])
-        predictions[valid_idx] = model.predict(valid[columns])
-        fold_scores.append(mean_absolute_error(valid[target], predictions[valid_idx]))
-        train_scores.append(mean_absolute_error(part[target], model.predict(part[columns])))
+    for (_, valid_idx), (fold_predictions, _) in zip(folds, fitted):
+        predictions[valid_idx] = fold_predictions
+        fold_scores.append(mean_absolute_error(train[target].iloc[valid_idx], fold_predictions))
     errors = (train[target] - predictions).abs()
     return {
         "mae": float(errors.mean()),
         "fold_std": float(np.std(fold_scores)),
-        "train_mae": float(np.mean(train_scores)),
+        "train_mae": float(np.mean([train_mae for _, train_mae in fitted])),
         "mae_by_variant": errors.groupby(train["variant"]).mean().to_dict(),
     }
