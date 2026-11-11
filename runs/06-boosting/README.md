@@ -64,7 +64,7 @@ XGBoost и CatBoost с функцией Huber начинают с нулевог
 
 ## Код
 
-Лог получен на текущем коде репозитория: [main.py](../../main.py), [config.yaml](../../config.yaml), [experiments](../../experiments), [src](../../src), [tests](../../tests).
+Лог получен на коде коммита [f3893f8](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/tree/f3893f8): [main.py](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/blob/f3893f8/main.py), [config.yaml](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/blob/f3893f8/config.yaml), [experiments](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/tree/f3893f8/experiments), [src](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/tree/f3893f8/src), [tests](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/tree/f3893f8/tests).
 
 ## Лог
 

@@ -1,0 +1,101 @@
+data:
+  dir: data
+  train_file: train.csv
+  test_file: sample_submission.csv
+  id_column: img_name
+  target: PSNR
+
+features:
+  table: features/features.csv.gz
+  recompute: false
+  images_dir: data
+
+# Поиск ведётся на фолдах seed из этого раздела.
+validation:
+  n_splits: 5
+  n_bins: 10
+  seed: 42
+
+# Исходная и подобранная модели сравниваются на фолдах check_seeds, MAE усредняется по ним.
+# timeout ограничивает время поиска для одной модели в секундах.
+tuning:
+  n_trials: 300
+  timeout: 7200
+  check_seeds: [43, 44, 45]
+
+# Исходные параметры — лучшая точка сетки основного конфига с функцией потерь MAE.
+models:
+  lightgbm:
+    type: lightgbm
+    params:
+      objective: l1
+      n_estimators: 2000
+      learning_rate: 0.02
+      num_leaves: 63
+      min_child_samples: 20
+      subsample: 0.8
+      subsample_freq: 1
+      colsample_bytree: 0.7
+      reg_alpha: 0.001
+      reg_lambda: 0.001
+      random_state: 0
+      n_jobs: -1
+      verbose: -1
+    search:
+      n_estimators: {low: 500, high: 4000, step: 100}
+      learning_rate: {low: 0.005, high: 0.1, log: true}
+      num_leaves: {low: 15, high: 255}
+      min_child_samples: {low: 5, high: 100}
+      subsample: {low: 0.5, high: 1.0}
+      colsample_bytree: {low: 0.2, high: 1.0}
+      reg_alpha: {low: 0.001, high: 10.0, log: true}
+      reg_lambda: {low: 0.001, high: 10.0, log: true}
+  xgboost:
+    type: xgboost
+    params:
+      objective: reg:absoluteerror
+      n_estimators: 2000
+      learning_rate: 0.02
+      max_depth: 8
+      min_child_weight: 1.0
+      subsample: 0.8
+      colsample_bytree: 0.7
+      reg_alpha: 0.001
+      reg_lambda: 1.0
+      tree_method: hist
+      random_state: 0
+      n_jobs: -1
+    search:
+      n_estimators: {low: 500, high: 4000, step: 100}
+      learning_rate: {low: 0.005, high: 0.1, log: true}
+      max_depth: {low: 3, high: 10}
+      min_child_weight: {low: 1.0, high: 50.0, log: true}
+      subsample: {low: 0.5, high: 1.0}
+      colsample_bytree: {low: 0.2, high: 1.0}
+      reg_alpha: {low: 0.001, high: 10.0, log: true}
+      reg_lambda: {low: 0.001, high: 10.0, log: true}
+  catboost:
+    type: catboost
+    params:
+      loss_function: MAE
+      iterations: 2000
+      learning_rate: 0.05
+      depth: 6
+      l2_leaf_reg: 3.0
+      bootstrap_type: Bernoulli
+      subsample: 0.8
+      rsm: 1.0
+      random_seed: 0
+      thread_count: -1
+      verbose: 0
+      allow_writing_files: false
+    search:
+      iterations: {low: 500, high: 4000, step: 100}
+      learning_rate: {low: 0.01, high: 0.15, log: true}
+      depth: {low: 4, high: 8}
+      l2_leaf_reg: {low: 1.0, high: 30.0, log: true}
+      subsample: {low: 0.5, high: 1.0}
+      rsm: {low: 0.2, high: 1.0}
+
+output:
+  dir: outputs/tuning

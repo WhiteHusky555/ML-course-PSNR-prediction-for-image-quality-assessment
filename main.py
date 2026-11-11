@@ -8,6 +8,7 @@ from src.config import load_config
 from src.data import attach_features, check_feature_table, feature_columns, load_data
 from src.features import extract_features
 from src.models import build_model, expand_grid, model_columns
+from src.tuning import tune_models
 from src.validation import cross_validate, make_folds
 
 FEATURE_FLOAT_FORMAT = "%.7g"
@@ -26,11 +27,14 @@ def prepare_feature_table(features_config, names, id_column):
     return table
 
 
-def evaluate_models(models, config, train, columns, target):
-    """Оценивает модели на общих фолдах и возвращает таблицу по возрастанию MAE."""
+def config_folds(config, train, target, seed):
+    """Разбиение на фолды по разделу validation с заданным seed."""
     validation = config["validation"]
-    folds = make_folds(train, target, validation["n_splits"], validation["n_bins"], validation["seed"],
-                       validation.get("group", True))
+    return make_folds(train, target, validation["n_splits"], validation["n_bins"], seed, validation.get("group", True))
+
+
+def evaluate_models(models, folds, train, columns, target):
+    """Оценивает модели на общих фолдах и возвращает таблицу по возрастанию MAE."""
     rows = []
     for name, spec in models.items():
         scores = cross_validate(lambda: build_model(spec), train, model_columns(spec, columns), folds, target,
@@ -40,6 +44,18 @@ def evaluate_models(models, config, train, columns, target):
         rows.append({"model": name, "mae": scores["mae"], "fold_std": scores["fold_std"],
                      "train_mae": scores["train_mae"], **by_variant})
     return pd.DataFrame(rows).sort_values("mae", ignore_index=True)
+
+
+def average_over_seeds(tables):
+    """Усредняет таблицы результатов, полученные на разных разбиениях.
+
+    При нескольких разбиениях добавляется столбец seed_std — разброс MAE между ними.
+    """
+    if len(tables) == 1:
+        return tables[0]
+    combined = pd.concat(tables).groupby("model", sort=False)
+    results = combined.mean().assign(seed_std=combined["mae"].std())
+    return results.sort_values("mae").reset_index()
 
 
 def run(config):
@@ -53,15 +69,24 @@ def run(config):
     test = attach_features(test, table, id_column)
     columns = feature_columns(train, id_column, target)
 
+    output_dir = Path(config["output"]["dir"])
+    output_dir.mkdir(parents=True, exist_ok=True)
     models = expand_grid(config["models"])
-    results = evaluate_models(models, config, train, columns, target)
+    seeds = [config["validation"]["seed"]]
+    if "tuning" in config:
+        # Параметры ищутся на фолдах основного seed, а модели сравниваются на фолдах других seed,
+        # чтобы оценка подобранных моделей не была завышена отбором по тем же разбиениям.
+        search_folds = config_folds(config, train, target, seeds[0])
+        models.update(tune_models(models, train, columns, search_folds, target, config["tuning"], seeds[0],
+                                  output_dir))
+        seeds = config["tuning"]["check_seeds"]
+    results = average_over_seeds(
+        [evaluate_models(models, config_folds(config, train, target, seed), train, columns, target) for seed in seeds])
     best_spec = models[results.loc[0, "model"]]
     best_columns = model_columns(best_spec, columns)
     best_model = build_model(best_spec).fit(train[best_columns], train[target])
     submission = test[[id_column]].assign(**{target: best_model.predict(test[best_columns])})
 
-    output_dir = Path(config["output"]["dir"])
-    output_dir.mkdir(parents=True, exist_ok=True)
     results.to_csv(output_dir / "results.csv", index=False)
     submission.to_csv(output_dir / "submission.csv", index=False)
     return results

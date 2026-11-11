@@ -11,7 +11,7 @@
 | [03-linear-models](03-linear-models) | линейные модели | 24 | 2,5 мин | Lasso 0,803 | [52a611b](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/commit/52a611b) |
 | [04-preprocessing](04-preprocessing) | исследования предобработки, кодирования и валидации, ограничение квантилями | 36 | 5 мин | Lasso 0,800 | [6b79cee](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/commit/6b79cee) |
 | [05-knn-tree-forest](05-knn-tree-forest) | KNN, решающее дерево, случайный лес | 40 | 2,5 ч | Random Forest 0,688 | [cf34382](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/commit/cf34382) |
-| [06-boosting](06-boosting) | градиентный бустинг, пять реализаций | 48 | 6,1 ч | XGBoost 0,646 | текущий |
+| [06-boosting](06-boosting) | градиентный бустинг, пять реализаций | 48 | 6,1 ч | XGBoost 0,646 | [f3893f8](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/commit/f3893f8) |
 
 Во всех проверочных прогонах сверка признаков дала одинаковый результат: наибольшее относительное расхождение 5·10⁻⁷. Код `src/features.py` воспроизводит таблицу признаков с точностью до округления до 7 значащих цифр.
 

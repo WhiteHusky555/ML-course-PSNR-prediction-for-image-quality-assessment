@@ -172,3 +172,16 @@ def test_parallel_folds_give_same_scores(config):
     sequential = cross_validate(lambda: build_model(spec), train, ["blur"], folds, "PSNR")
     parallel = cross_validate(lambda: build_model(spec), train, ["blur"], folds, "PSNR", n_jobs=2)
     assert parallel == sequential
+
+
+def test_run_with_tuning_compares_models_on_check_seeds(config):
+    config["models"] = {"ridge": {"type": "ridge", "params": {"alpha": 1.0},
+                                  "search": {"alpha": {"low": 0.1, "high": 10.0, "log": True}}}}
+    config["tuning"] = {"n_trials": 3, "check_seeds": [1, 2]}
+
+    results = run(config)
+
+    assert sorted(results["model"]) == ["ridge", "ridge tuned"]
+    assert "seed_std" in results
+    assert (config["output"]["dir"] / "trials_ridge.csv").exists()
+    assert (config["output"]["dir"] / "best_params.yaml").exists()
