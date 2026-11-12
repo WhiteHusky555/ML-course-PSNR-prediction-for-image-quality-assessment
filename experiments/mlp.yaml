@@ -1,0 +1,122 @@
+data:
+  dir: data
+  train_file: train.csv
+  test_file: sample_submission.csv
+  id_column: img_name
+  target: PSNR
+
+features:
+  table: features/features.csv.gz
+  recompute: false
+  images_dir: data
+
+validation:
+  n_splits: 5
+  n_bins: 10
+  seed: 42
+
+# Шаги идут по пунктам чек-листа: от сети с одним скрытым слоем к более глубокой с батч-нормализацией
+# и dropout, затем каждый параметр меняется по отдельности относительно базовой сети mlp_base.
+# Признаки ограничиваются квантилями и стандартизуются, как для линейных моделей.
+base: &base
+  hidden_units: [256, 128, 64]
+  activation: relu
+  batch_norm: true
+  dropout: 0.1
+  optimizer: adam
+  learning_rate: 0.001
+  scheduler: cosine
+  batch_size: 256
+  epochs: 100
+  loss: mae
+  random_state: 0
+
+models:
+  mlp_simple:
+    type: mlp
+    clip: [0.001, 0.999]
+    scaler: standard
+    params: {<<: *base, hidden_units: [128], batch_norm: false, dropout: 0.0, scheduler: null}
+  mlp_depth:
+    type: mlp
+    clip: [0.001, 0.999]
+    scaler: standard
+    params: {<<: *base, batch_norm: false, dropout: 0.0, scheduler: null}
+    grid:
+      hidden_units: [[256, 128], [256, 128, 64], [512, 256, 128, 64]]
+  mlp_batchnorm:
+    type: mlp
+    clip: [0.001, 0.999]
+    scaler: standard
+    params: {<<: *base, dropout: 0.0, scheduler: null}
+  mlp_dropout:
+    type: mlp
+    clip: [0.001, 0.999]
+    scaler: standard
+    params: {<<: *base, scheduler: null}
+    grid:
+      dropout: [0.1, 0.2, 0.3, 0.5]
+  mlp_base:
+    type: mlp
+    clip: [0.001, 0.999]
+    scaler: standard
+    params: *base
+  mlp_width:
+    type: mlp
+    clip: [0.001, 0.999]
+    scaler: standard
+    params: *base
+    grid:
+      hidden_units: [[64, 32, 16], [512, 256, 128], [1024, 512, 256]]
+  mlp_activation:
+    type: mlp
+    clip: [0.001, 0.999]
+    scaler: standard
+    params: *base
+    grid:
+      activation: [gelu, silu, tanh, elu]
+  mlp_optimizer:
+    type: mlp
+    clip: [0.001, 0.999]
+    scaler: standard
+    params: *base
+    grid:
+      optimizer: [adamw, rmsprop]
+  mlp_sgd:
+    type: mlp
+    clip: [0.001, 0.999]
+    scaler: standard
+    params: {<<: *base, optimizer: sgd}
+    grid:
+      learning_rate: [0.01, 0.05]
+  mlp_learning_rate:
+    type: mlp
+    clip: [0.001, 0.999]
+    scaler: standard
+    params: *base
+    grid:
+      learning_rate: [0.0003, 0.003, 0.01]
+  mlp_batch_size:
+    type: mlp
+    clip: [0.001, 0.999]
+    scaler: standard
+    params: *base
+    grid:
+      batch_size: [64, 1024]
+  mlp_epochs:
+    type: mlp
+    clip: [0.001, 0.999]
+    scaler: standard
+    params: *base
+    grid:
+      epochs: [50, 200]
+  mlp_loss:
+    type: mlp
+    clip: [0.001, 0.999]
+    scaler: standard
+    params: *base
+    grid:
+      loss: [mse, huber]
+
+output:
+  dir: outputs/mlp

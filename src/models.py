@@ -15,6 +15,7 @@ from sklearn.preprocessing import (OneHotEncoder, OrdinalEncoder, QuantileTransf
 from sklearn.tree import DecisionTreeRegressor
 from xgboost import XGBRegressor
 
+from src.neural import MLPRegressor
 from src.preprocessing import CorrelationFilter, QuantileClipper
 
 MODEL_TYPES = {
@@ -31,6 +32,7 @@ MODEL_TYPES = {
     "lightgbm": LGBMRegressor,
     "xgboost": XGBRegressor,
     "catboost": CatBoostRegressor,
+    "mlp": MLPRegressor,
 }
 SCALERS = {
     "standard": StandardScaler,
