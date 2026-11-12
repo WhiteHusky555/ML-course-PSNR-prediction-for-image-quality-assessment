@@ -7,7 +7,7 @@ import pandas as pd
 from src.config import load_config
 from src.data import attach_features, check_feature_table, feature_columns, load_data
 from src.features import extract_features
-from src.models import build_model, expand_grid, model_columns
+from src.models import build_model, expand_grid, model_columns, uses_images
 from src.tuning import tune_models
 from src.validation import cross_validate, make_folds
 
@@ -71,7 +71,9 @@ def run(config):
 
     output_dir = Path(config["output"]["dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
-    models = expand_grid(config["models"])
+    images_dir = config["features"]["images_dir"]
+    models = {name: {**spec, "params": {**spec.get("params", {}), "images_dir": images_dir}} if uses_images(spec)
+              else spec for name, spec in expand_grid(config["models"]).items()}
     seeds = [config["validation"]["seed"]]
     if "tuning" in config:
         # Параметры ищутся на фолдах основного seed, а модели сравниваются на фолдах других seed,

@@ -15,6 +15,7 @@ from sklearn.preprocessing import (OneHotEncoder, OrdinalEncoder, QuantileTransf
 from sklearn.tree import DecisionTreeRegressor
 from xgboost import XGBRegressor
 
+from src.cnn import ImageCNNRegressor
 from src.neural import MLPRegressor
 from src.preprocessing import CorrelationFilter, QuantileClipper
 
@@ -33,6 +34,7 @@ MODEL_TYPES = {
     "xgboost": XGBRegressor,
     "catboost": CatBoostRegressor,
     "mlp": MLPRegressor,
+    "cnn": ImageCNNRegressor,
 }
 SCALERS = {
     "standard": StandardScaler,
@@ -45,6 +47,8 @@ ENCODERS = {
     "target": lambda: TargetEncoder(target_type="continuous", random_state=0),
 }
 VARIANT_COLUMN = "variant"
+IMAGE_COLUMN = "img_name"
+IMAGE_MODEL_TYPES = {"cnn"}
 
 
 def choose(table, name, kind):
@@ -95,8 +99,18 @@ def build_model(spec):
     return make_pipeline(*steps, model) if steps else model
 
 
+def uses_images(spec):
+    """Обучается ли модель на самих изображениях, а не на таблице признаков."""
+    return spec["type"] in IMAGE_MODEL_TYPES
+
+
 def model_columns(spec, columns):
-    """Столбцы, которые подаются модели: признаки и, если задано кодирование, номер варианта."""
+    """Столбцы, которые подаются модели: признаки и, если задано кодирование, номер варианта.
+
+    Моделям на изображениях подаётся только имя файла, изображение они читают сами.
+    """
+    if uses_images(spec):
+        return [IMAGE_COLUMN]
     return [*columns, VARIANT_COLUMN] if "variant" in spec else list(columns)
 
 

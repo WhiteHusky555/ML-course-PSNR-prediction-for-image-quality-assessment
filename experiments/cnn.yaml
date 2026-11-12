@@ -1,0 +1,50 @@
+data:
+  dir: data
+  train_file: train.csv
+  test_file: sample_submission.csv
+  id_column: img_name
+  target: PSNR
+
+# Свёрточные сети читают сами изображения из images_dir; таблица признаков им не нужна,
+# но пайплайн загружает её, чтобы проверить состав изображений.
+features:
+  table: features/features.csv.gz
+  recompute: false
+  images_dir: data
+
+validation:
+  n_splits: 5
+  n_bins: 10
+  seed: 42
+
+# Изображения подаются целиком в исходном разрешении 640×480; обучающие случайно отражаются.
+models:
+  cnn_small:
+    type: cnn
+    params:
+      backbone: small
+      filters: [32, 64, 128, 256]
+      optimizer: adamw
+      learning_rate: 0.001
+      scheduler: cosine
+      batch_size: 16
+      epochs: 20
+      loss: mae
+      flips: true
+      random_state: 0
+  cnn_efficientnet:
+    type: cnn
+    params:
+      backbone: efficientnetb0
+      pretrained: true
+      optimizer: adamw
+      learning_rate: 0.0003
+      scheduler: cosine
+      batch_size: 16
+      epochs: 15
+      loss: mae
+      flips: true
+      random_state: 0
+
+output:
+  dir: outputs/cnn
