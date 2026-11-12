@@ -1,0 +1,25 @@
+catboost:
+  depth: 8
+  iterations: 2400
+  l2_leaf_reg: 13.962563737015762
+  learning_rate: 0.016497027917250065
+  rsm: 0.915861880342119
+  subsample: 0.9697494707820946
+lightgbm:
+  colsample_bytree: 0.9183270104643302
+  learning_rate: 0.005078394391066665
+  min_child_samples: 25
+  n_estimators: 3600
+  num_leaves: 202
+  reg_alpha: 0.06838365418401657
+  reg_lambda: 5.41407978695298
+  subsample: 0.9300470483539656
+xgboost:
+  colsample_bytree: 0.7160559305445643
+  learning_rate: 0.013617591946945009
+  max_depth: 9
+  min_child_weight: 6.801168266546549
+  n_estimators: 2900
+  reg_alpha: 0.26544317420600144
+  reg_lambda: 1.8044466232648673
+  subsample: 0.8137076949845414
