@@ -42,7 +42,7 @@ Optuna использует TPE — байесовский метод, кото�
 | XGBoost | 2900 деревьев, шаг 0,014, `max_depth` 9, `min_child_weight` 6,8, `subsample` 0,81, `colsample_bytree` 0,72, `reg_alpha` 0,27, `reg_lambda` 1,8 |
 | CatBoost | 2400 деревьев, шаг 0,016, `depth` 8, `l2_leaf_reg` 14, `subsample` 0,97, `rsm` 0,92 |
 
-Сабмит этого прогона — прогноз подобранного LightGBM, обученного на всём train.
+Сабмит этого прогона — прогноз подобранного LightGBM, обученного на всём train. На Kaggle он получил 0,60039 на public и 0,62189 на private против 0,63348 и 0,66349 у Random Forest. Сабмит № 58259885 отправлен после завершения соревнования, поэтому в таблицу лидеров не попадает и виден только автору на странице [Submissions](https://www.kaggle.com/competitions/psnr-iqa/submissions).
 
 ## Выводы
 
