@@ -13,6 +13,7 @@
 | [05-knn-tree-forest](05-knn-tree-forest) | KNN, решающее дерево, случайный лес | 40 | 2,5 ч | Random Forest 0,688 | [cf34382](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/commit/cf34382) |
 | [06-boosting](06-boosting) | градиентный бустинг, пять реализаций | 48 | 6,1 ч | XGBoost 0,646 | [f3893f8](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/commit/f3893f8) |
 | [07-tuning](07-tuning) | подбор гиперпараметров LightGBM, XGBoost и CatBoost (Optuna) | 52 | 9,1 ч | LightGBM 0,645 на контрольных разбиениях | [feb9dbd](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/commit/feb9dbd) |
+| [08-mlp](08-mlp) | полносвязная нейросеть на Keras: 35 сетей по пунктам чек-листа | 60 | 1,5 ч | MLP 0,652 | [bd8538b](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/commit/bd8538b) |
 
 Во всех проверочных прогонах сверка признаков дала одинаковый результат: наибольшее относительное расхождение 5·10⁻⁷. Код `src/features.py` воспроизводит таблицу признаков с точностью до округления до 7 значащих цифр.
 
