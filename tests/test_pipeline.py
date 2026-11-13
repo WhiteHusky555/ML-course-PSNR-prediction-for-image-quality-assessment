@@ -118,6 +118,26 @@ def test_run_evaluates_each_grid_point_and_submits_best(config):
     assert saved["PSNR"].nunique() == len(saved)
 
 
+def test_run_saves_predictions_of_every_model_for_ensembles(config):
+    table = pd.read_csv(config["features"]["table"])
+    table["blur"] = np.arange(len(table), dtype=float)
+    table.to_csv(config["features"]["table"], index=False)
+    config["models"] = {"median": {"type": "dummy", "params": {"strategy": "median"}},
+                        "ridge": {"type": "ridge", "params": {"alpha": 1.0}}}
+
+    results = run(config).set_index("model")
+    output_dir = config["output"]["dir"]
+    oof = pd.read_csv(output_dir / "oof_predictions.csv")
+    test = pd.read_csv(output_dir / "test_predictions.csv")
+    submission = pd.read_csv(output_dir / "submission.csv")
+
+    assert list(oof.columns) == ["img_name", "PSNR", "median", "ridge"]
+    assert list(test.columns) == ["img_name", "median", "ridge"]
+    for name in ("median", "ridge"):
+        assert (oof["PSNR"] - oof[name]).abs().mean() == pytest.approx(results.loc[name, "mae"])
+    assert submission["PSNR"].to_numpy() == pytest.approx(test[results.index[0]].to_numpy())
+
+
 def test_results_show_overfitting_of_nearest_neighbour(config):
     rng = np.random.default_rng(0)
     table = pd.read_csv(config["features"]["table"])
@@ -138,6 +158,7 @@ def test_parallel_folds_give_same_scores(config):
     spec = {"type": "gradboost", "params": {"n_estimators": 20, "random_state": 0}}
     sequential = cross_validate(lambda: build_model(spec), train, ["blur"], folds, "PSNR")
     parallel = cross_validate(lambda: build_model(spec), train, ["blur"], folds, "PSNR", n_jobs=2)
+    assert np.array_equal(parallel.pop("predictions"), sequential.pop("predictions"))
     assert parallel == sequential
 
 

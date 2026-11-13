@@ -33,17 +33,30 @@ def config_folds(config, train, target, seed):
     return make_folds(train, target, validation["n_splits"], validation["n_bins"], seed, validation.get("group", True))
 
 
-def evaluate_models(models, folds, train, columns, target):
-    """Оценивает модели на общих фолдах и возвращает таблицу по возрастанию MAE."""
-    rows = []
+def evaluate_models(models, folds, train, test, columns, target):
+    """Оценивает модели на общих фолдах.
+
+    Возвращает таблицу по возрастанию MAE и для каждой модели пару из out-of-fold предсказаний
+    на train и среднего прогноза моделей фолдов на test.
+    """
+    rows, predictions = [], {}
     for name, spec in models.items():
         scores = cross_validate(lambda: build_model(spec), train, model_columns(spec, columns), folds, target,
-                                spec.get("fold_jobs", 1))
+                                spec.get("fold_jobs", 1), test)
         print(f"{name}: MAE {scores['mae']:.4f}", flush=True)
         by_variant = {f"mae_{variant}": mae for variant, mae in scores["mae_by_variant"].items()}
         rows.append({"model": name, "mae": scores["mae"], "fold_std": scores["fold_std"],
                      "train_mae": scores["train_mae"], **by_variant})
-    return pd.DataFrame(rows).sort_values("mae", ignore_index=True)
+        predictions[name] = scores["predictions"], scores["test_predictions"]
+    return pd.DataFrame(rows).sort_values("mae", ignore_index=True), predictions
+
+
+def save_predictions(predictions, train, test, id_column, target, output_dir):
+    """Сохраняет out-of-fold предсказания и прогнозы на test всех моделей: по столбцу на модель."""
+    oof = train[[id_column, target]].assign(**{name: values for name, (values, _) in predictions.items()})
+    test_table = test[[id_column]].assign(**{name: values for name, (_, values) in predictions.items()})
+    oof.to_csv(output_dir / "oof_predictions.csv", index=False)
+    test_table.to_csv(output_dir / "test_predictions.csv", index=False)
 
 
 def average_over_seeds(tables):
@@ -82,12 +95,14 @@ def run(config):
         models.update(tune_models(models, train, columns, search_folds, target, config["tuning"], seeds[0],
                                   output_dir))
         seeds = config["tuning"]["check_seeds"]
-    results = average_over_seeds(
-        [evaluate_models(models, config_folds(config, train, target, seed), train, columns, target) for seed in seeds])
-    best_spec = models[results.loc[0, "model"]]
-    best_columns = model_columns(best_spec, columns)
-    best_model = build_model(best_spec).fit(train[best_columns], train[target])
-    submission = test[[id_column]].assign(**{target: best_model.predict(test[best_columns])})
+    evaluated = [evaluate_models(models, config_folds(config, train, target, seed), train, test, columns, target)
+                 for seed in seeds]
+    results = average_over_seeds([table for table, _ in evaluated])
+    # Прогнозы сохраняются по первому разбиению: на нём модели обучены, и out-of-fold предсказания согласованы.
+    predictions = evaluated[0][1]
+    save_predictions(predictions, train, test, id_column, target, output_dir)
+    # Сабмит — среднее прогнозов моделей пяти фолдов лучшей модели: отдельное обучение на всём train не нужно.
+    submission = test[[id_column]].assign(**{target: predictions[results.loc[0, "model"]][1]})
 
     results.to_csv(output_dir / "results.csv", index=False)
     submission.to_csv(output_dir / "submission.csv", index=False)
