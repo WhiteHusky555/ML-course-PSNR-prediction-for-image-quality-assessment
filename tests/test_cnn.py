@@ -7,7 +7,6 @@ from PIL import Image
 from main import run
 from src.cnn import ImageCNNRegressor
 from src.models import model_columns
-from tests.test_pipeline import config  # noqa: F401 — фикстура с данными для пайплайна
 
 SMALL = {"backbone": "small", "filters": [4, 8], "batch_size": 8}
 
@@ -39,7 +38,7 @@ def test_image_model_receives_only_file_names():
     assert model_columns({"type": "cnn"}, ["blur", "noise"]) == ["img_name"]
 
 
-def test_run_trains_cnn_on_images(config):  # noqa: F811
+def test_run_trains_cnn_on_images(config):
     names = pd.concat([pd.read_csv(config["data"]["dir"] / file)["img_name"]
                        for file in ("train.csv", "sample_submission.csv")])
     write_images(config["features"]["images_dir"] / "images", names, np.full(len(names), 128))
