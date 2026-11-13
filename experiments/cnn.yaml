@@ -17,8 +17,10 @@ validation:
   n_bins: 10
   seed: 42
 
-# Обучение на случайных вырезках 256×256 в исходном масштабе со смешанной точностью, прогноз по целому
-# изображению 640×480; обучающие вырезки случайно отражаются.
+# Все сети делают прогноз по целому изображению 640×480 и считаются со смешанной точностью; обучающие
+# изображения случайно отражаются. cnn_small и cnn_efficientnet_crop обучаются на случайных вырезках
+# 256×256 в исходном масштабе, cnn_efficientnet — на целых изображениях. Две EfficientNet отличаются
+# только вырезками (и мини-батчем, который для целых изображений уменьшен под память GPU).
 models:
   cnn_small:
     type: cnn
@@ -37,19 +39,24 @@ models:
       random_state: 0
   cnn_efficientnet:
     type: cnn
-    params:
+    params: &efficientnet
       backbone: efficientnetb0
       pretrained: true
       optimizer: adamw
       learning_rate: 0.0003
       scheduler: cosine
-      batch_size: 32
-      epochs: 15
+      batch_size: 16
+      epochs: 8
       loss: mae
       flips: true
-      crop: [256, 256]
       mixed_precision: true
       random_state: 0
+  cnn_efficientnet_crop:
+    type: cnn
+    params:
+      <<: *efficientnet
+      batch_size: 32
+      crop: [256, 256]
 
 output:
   dir: outputs/cnn
