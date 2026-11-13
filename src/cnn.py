@@ -8,6 +8,13 @@ from src.neural import learning_rate_schedule, make_optimizer, train_network
 PREDICT_BATCH_SIZE = 8
 
 
+def read_image(path):
+    """Читает PNG в тензор float32 со значениями 0–255. AutoGraph не нужен: в функции нет ветвлений."""
+    import tensorflow as tf
+
+    return tf.cast(tf.io.decode_png(tf.io.read_file(path), channels=3), tf.float32)
+
+
 def build_small_cnn(filters):
     """Свёрточная сеть с нуля: в каждом блоке две свёртки 3×3 с батч-нормализацией и ReLU,
     затем уменьшение размера вдвое; после блоков — усреднение по всему изображению и выход."""
@@ -60,18 +67,9 @@ class ImageCNNRegressor(BaseEstimator, RegressorMixin):
         self.flips = flips
         self.random_state = random_state
 
-    def _images(self, X):
-        """Набор изображений в порядке имён из X."""
-        import tensorflow as tf
-
-        paths = find_images(np.asarray(X).ravel().tolist(), self.images_dir)
-
-        # Функции чтения и отражения не содержат ветвлений Python, поэтому AutoGraph им не нужен.
-        @tf.autograph.experimental.do_not_convert
-        def decode(path):
-            return tf.cast(tf.io.decode_png(tf.io.read_file(path), channels=3), tf.float32)
-
-        return tf.data.Dataset.from_tensor_slices(paths).map(decode, num_parallel_calls=tf.data.AUTOTUNE)
+    def _paths(self, X):
+        """Пути к изображениям в порядке имён из X."""
+        return find_images(np.asarray(X).ravel().tolist(), self.images_dir)
 
     def _build(self):
         if self.backbone == "small":
@@ -89,15 +87,20 @@ class ImageCNNRegressor(BaseEstimator, RegressorMixin):
         self.model_ = self._build()
         target = np.asarray(y, dtype="float32")
         self.target_mean_, self.target_std_ = float(target.mean()), float(target.std())
-        scaled = tf.data.Dataset.from_tensor_slices(((target - self.target_mean_) / self.target_std_).reshape(-1, 1))
-        pairs = tf.data.Dataset.zip((self._images(X), scaled)).shuffle(len(target), seed=self.random_state)
-        if self.flips:
-            @tf.autograph.experimental.do_not_convert
-            def flip(image, value):
-                return tf.image.random_flip_up_down(tf.image.random_flip_left_right(image)), value
+        scaled = ((target - self.target_mean_) / self.target_std_).reshape(-1, 1)
 
-            pairs = pairs.map(flip, num_parallel_calls=tf.data.AUTOTUNE)
-        batches = pairs.batch(self.batch_size).prefetch(tf.data.AUTOTUNE)
+        def load(path, value):
+            image = read_image(path)
+            if self.flips:
+                image = tf.image.random_flip_up_down(tf.image.random_flip_left_right(image))
+            return image, value
+
+        # Перемешиваются пути, а изображения читаются уже после: буфер перемешивания из раскодированных
+        # изображений занял бы десятки гигабайт памяти.
+        batches = (tf.data.Dataset.from_tensor_slices((self._paths(X), scaled))
+                   .shuffle(len(target), seed=self.random_state)
+                   .map(tf.autograph.experimental.do_not_convert(load), num_parallel_calls=tf.data.AUTOTUNE)
+                   .batch(self.batch_size).prefetch(tf.data.AUTOTUNE))
 
         steps = int(np.ceil(len(target) / self.batch_size)) * self.epochs
         optimizer = make_optimizer(self.optimizer, learning_rate_schedule(self.learning_rate, self.scheduler, steps))
@@ -107,6 +110,8 @@ class ImageCNNRegressor(BaseEstimator, RegressorMixin):
     def predict(self, X):
         import tensorflow as tf
 
-        batches = self._images(X).batch(PREDICT_BATCH_SIZE).prefetch(tf.data.AUTOTUNE)
+        batches = (tf.data.Dataset.from_tensor_slices(self._paths(X))
+                   .map(tf.autograph.experimental.do_not_convert(read_image), num_parallel_calls=tf.data.AUTOTUNE)
+                   .batch(PREDICT_BATCH_SIZE).prefetch(tf.data.AUTOTUNE))
         scaled = np.concatenate([self.model_(batch, training=False).numpy()[:, 0] for batch in batches])
         return scaled * self.target_std_ + self.target_mean_
