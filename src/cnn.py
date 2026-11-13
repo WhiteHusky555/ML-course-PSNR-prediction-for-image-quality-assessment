@@ -15,6 +15,13 @@ def read_image(path):
     return tf.cast(tf.io.decode_png(tf.io.read_file(path), channels=3), tf.float32)
 
 
+def output_layer():
+    """Выход регрессии всегда в float32: при смешанной точности float16 огрубил бы прогноз."""
+    import keras
+
+    return keras.layers.Dense(1, dtype="float32")
+
+
 def build_small_cnn(filters):
     """Свёрточная сеть с нуля: в каждом блоке две свёртки 3×3 с батч-нормализацией и ReLU,
     затем уменьшение размера вдвое; после блоков — усреднение по всему изображению и выход."""
@@ -26,7 +33,7 @@ def build_small_cnn(filters):
             layers += [keras.layers.Conv2D(count, 3, padding="same", use_bias=False),
                        keras.layers.BatchNormalization(), keras.layers.Activation("relu")]
         layers.append(keras.layers.MaxPooling2D())
-    layers += [keras.layers.GlobalAveragePooling2D(), keras.layers.Dense(1)]
+    layers += [keras.layers.GlobalAveragePooling2D(), output_layer()]
     return keras.Sequential(layers)
 
 
@@ -36,24 +43,26 @@ def build_efficientnet(pretrained):
 
     backbone = keras.applications.EfficientNetB0(include_top=False, weights="imagenet" if pretrained else None,
                                                  input_shape=(None, None, 3), pooling="avg")
-    return keras.Sequential([backbone, keras.layers.Dense(1)])
+    return keras.Sequential([backbone, output_layer()])
 
 
 class ImageCNNRegressor(BaseEstimator, RegressorMixin):
     """Свёрточная сеть на изображениях в исходном разрешении.
 
     На вход подаются имена файлов изображений, сами изображения читаются из images_dir. Изображения
-    не уменьшаются и не обрезаются: уменьшение стёрло бы размытие, шум и следы сжатия, по которым
+    не уменьшаются: уменьшение стёрло бы размытие, шум и следы сжатия, по которым
     оценивается PSNR. Сеть заканчивается усреднением по всему изображению, поэтому принимает любой
     размер. backbone="small" — сеть с нуля из блоков с числом фильтров filters, backbone="efficientnetb0" —
     EfficientNetB0, при pretrained=True с весами, обученными на ImageNet. При flips=True обучающие
-    изображения случайно отражаются по горизонтали и вертикали: это не меняет PSNR. Целевая переменная
-    стандартизуется, как в MLPRegressor.
+    изображения случайно отражаются по горизонтали и вертикали: это не меняет PSNR. Если задан
+    crop=(высота, ширина), сеть обучается на случайных вырезках этого размера, а прогноз делает по целому
+    изображению. При mixed_precision=True вычисления идут во float16 с масштабированием потерь, а веса
+    хранятся во float32. Целевая переменная стандартизуется, как в MLPRegressor.
     """
 
     def __init__(self, images_dir="data", backbone="small", filters=(32, 64, 128, 256), pretrained=True,
                  optimizer="adamw", learning_rate=3e-4, scheduler="cosine", batch_size=16, epochs=10, loss="mae",
-                 flips=True, random_state=0):
+                 flips=True, crop=None, mixed_precision=False, random_state=0):
         self.images_dir = images_dir
         self.backbone = backbone
         self.filters = filters
@@ -65,6 +74,8 @@ class ImageCNNRegressor(BaseEstimator, RegressorMixin):
         self.epochs = epochs
         self.loss = loss
         self.flips = flips
+        self.crop = crop
+        self.mixed_precision = mixed_precision
         self.random_state = random_state
 
     def _paths(self, X):
@@ -72,11 +83,19 @@ class ImageCNNRegressor(BaseEstimator, RegressorMixin):
         return find_images(np.asarray(X).ravel().tolist(), self.images_dir)
 
     def _build(self):
-        if self.backbone == "small":
-            return build_small_cnn(self.filters)
-        if self.backbone == "efficientnetb0":
-            return build_efficientnet(self.pretrained)
-        raise ValueError(f"Неизвестная архитектура {self.backbone}, доступны: small, efficientnetb0")
+        """Собирает сеть; политика точности задаётся только на время сборки, чтобы не влиять на другие модели."""
+        import keras
+
+        builders = {"small": lambda: build_small_cnn(self.filters),
+                    "efficientnetb0": lambda: build_efficientnet(self.pretrained)}
+        if self.backbone not in builders:
+            raise ValueError(f"Неизвестная архитектура {self.backbone}, доступны: {sorted(builders)}")
+        previous = keras.config.dtype_policy()
+        keras.config.set_dtype_policy("mixed_float16" if self.mixed_precision else "float32")
+        try:
+            return builders[self.backbone]()
+        finally:
+            keras.config.set_dtype_policy(previous)
 
     def fit(self, X, y):
         """Обучает сеть на мини-батчах изображений, перемешивая их в каждой эпохе."""
@@ -91,6 +110,8 @@ class ImageCNNRegressor(BaseEstimator, RegressorMixin):
 
         def load(path, value):
             image = read_image(path)
+            if self.crop is not None:
+                image = tf.image.random_crop(image, (*self.crop, 3))
             if self.flips:
                 image = tf.image.random_flip_up_down(tf.image.random_flip_left_right(image))
             return image, value
@@ -104,6 +125,9 @@ class ImageCNNRegressor(BaseEstimator, RegressorMixin):
 
         steps = int(np.ceil(len(target) / self.batch_size)) * self.epochs
         optimizer = make_optimizer(self.optimizer, learning_rate_schedule(self.learning_rate, self.scheduler, steps))
+        if self.mixed_precision:
+            # Без масштабирования малые градиенты во float16 обращаются в ноль.
+            optimizer = keras.optimizers.LossScaleOptimizer(optimizer)
         train_network(self.model_, batches, self.loss, optimizer, self.epochs)
         return self
 

@@ -17,7 +17,8 @@ validation:
   n_bins: 10
   seed: 42
 
-# Изображения подаются целиком в исходном разрешении 640×480; обучающие случайно отражаются.
+# Обучение на случайных вырезках 256×256 в исходном масштабе со смешанной точностью, прогноз по целому
+# изображению 640×480; обучающие вырезки случайно отражаются.
 models:
   cnn_small:
     type: cnn
@@ -27,10 +28,12 @@ models:
       optimizer: adamw
       learning_rate: 0.001
       scheduler: cosine
-      batch_size: 16
+      batch_size: 32
       epochs: 20
       loss: mae
       flips: true
+      crop: [256, 256]
+      mixed_precision: true
       random_state: 0
   cnn_efficientnet:
     type: cnn
@@ -40,10 +43,12 @@ models:
       optimizer: adamw
       learning_rate: 0.0003
       scheduler: cosine
-      batch_size: 16
+      batch_size: 32
       epochs: 15
       loss: mae
       flips: true
+      crop: [256, 256]
+      mixed_precision: true
       random_state: 0
 
 output:

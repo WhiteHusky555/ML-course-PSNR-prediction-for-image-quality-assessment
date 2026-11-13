@@ -44,13 +44,16 @@ def train_network(model, batches, loss, optimizer, epochs):
     import tensorflow as tf
 
     loss_function = keras.losses.get(loss)
+    # Оптимизатор создаёт свои переменные до трассировки шага: иначе LossScaleOptimizer запишет в граф
+    # начальный множитель потерь вместо текущего.
+    optimizer.build(model.trainable_variables)
 
     # Без XLA-компиляции: она удерживает память процесса для каждой модели, а моделей обучаются сотни.
     # AutoGraph не нужен: в шаге нет ветвлений и циклов Python.
     @tf.function(jit_compile=False, autograph=False)
     def train_step(inputs, target):
         with tf.GradientTape() as tape:
-            value = tf.reduce_mean(loss_function(target, model(inputs, training=True)))
+            value = optimizer.scale_loss(tf.reduce_mean(loss_function(target, model(inputs, training=True))))
         gradients = tape.gradient(value, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
