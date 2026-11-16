@@ -68,7 +68,9 @@ def test_run_ensemble_prefers_accurate_model(config, tmp_path):
     config["predictions"] = [write_pair(tmp_path, "base", train["img_name"], test["img_name"],
                                         {"exact": exact, "shifted": shifted})]
     config["models"] = {"mean": {"type": "blend", "inputs": "predictions", "params": {"equal": True}},
-                        "weights": {"type": "blend", "inputs": "predictions"}}
+                        "weights": {"type": "blend", "inputs": "predictions"},
+                        "stacking": {"type": "lightgbm", "params": {"n_estimators": 5, "min_child_samples": 2,
+                                                                    "verbose": -1}}}
 
     results = run(config).set_index("model")
 

@@ -5,7 +5,8 @@ from scipy.optimize import linprog
 from scipy.sparse import csr_matrix, eye, hstack, vstack
 from sklearn.base import BaseEstimator, RegressorMixin
 
-PREDICTION_PREFIX = "pred: "
+# LightGBM не принимает в именах признаков символы JSON, в том числе двоеточие.
+PREDICTION_PREFIX = "pred_"
 
 
 class WeightedBlend(BaseEstimator, RegressorMixin):
