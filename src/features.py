@@ -1,8 +1,8 @@
 """Извлечение признаков качества из изображений.
 
 Каждому изображению соответствует одна строка таблицы. Признаки вычисляются только из пикселей
-и описывают статистики цвета, резкость, шум, блочность, спектр, естественную статистику сцены
-и текстуру.
+и описывают статистики цвета, резкость, шум, блочность, спектр, естественную статистику сцены,
+текстуру и следы отдельных искажений: изменения уровней, шума и изменения размера.
 """
 import multiprocessing
 import os
@@ -40,6 +40,13 @@ LBP_RADIUS = 1
 GABOR_WAVELENGTHS = (4, 8, 16)
 GABOR_ORIENTATIONS = (0.0, np.pi / 4, np.pi / 2, 3 * np.pi / 4)
 GABOR_SIZE = 31
+HISTOGRAM_PEAK_RATIO = 1.5
+HAAR_MAD_SCALE = 0.6745
+NOISE_SIGMA_FLOOR = 0.1
+PSNR_PEAK = 255.0
+# Пики спектра второй производной на частотах ниже этой дают объекты сцены, а не интерполяция.
+RESAMPLE_MIN_FREQUENCY = 0.03
+RESIZE_SCALES = (1.5, 2, 3, 4)
 
 IMMERKAER_MASK = np.array([[1, -2, 1], [-2, 4, -2], [1, -2, 1]], dtype=np.float32)
 GGD_SHAPES = np.arange(0.2, 10.0, 0.01)
@@ -286,6 +293,92 @@ def texture_features(gray):
     return features
 
 
+def histogram_features(bgr):
+    """Следы табличного изменения уровней (контраст, яркость): пропуски и пики гистограммы каналов.
+
+    Растяжение диапазона оставляет пустые уровни, сжатие сливает соседние уровни в пики,
+    поэтому гистограмма становится зубчатой. У неискажённого кадра она гладкая.
+    """
+    empty, peaks, roughness, distinct = [], [], [], []
+    for index in range(3):
+        counts = np.bincount(bgr[:, :, index].ravel(), minlength=256).astype(np.float64)
+        used = np.flatnonzero(counts)
+        inner = counts[used[0]:used[-1] + 1]
+        distinct.append(used.size / 256)
+        if inner.size < 3:
+            empty.append(0.0)
+            peaks.append(0.0)
+            roughness.append(0.0)
+            continue
+        neighbours = (inner[:-2] + inner[2:]) / 2
+        empty.append(float((inner == 0).mean()))
+        peaks.append(float((inner[1:-1] > HISTOGRAM_PEAK_RATIO * neighbours + 1).mean()))
+        roughness.append(float(np.abs(inner[1:-1] - neighbours).sum() / inner.sum()))
+    return {
+        "dist_hist_empty": float(np.mean(empty)),
+        "dist_hist_peaks": float(np.mean(peaks)),
+        "dist_hist_roughness": float(np.mean(roughness)),
+        "dist_distinct_share": float(np.mean(distinct)),
+    }
+
+
+def haar_noise_sigma(bgr):
+    """Оценка σ шума по медиане модулей диагональных коэффициентов Хаара (оценка Донохо).
+
+    σ оценивается в каждом канале и усредняется по квадратам, как ошибка в PSNR по RGB:
+    в яркости независимый шум каналов ослабляется в 0,67 раза.
+    """
+    height, width = bgr.shape[0] // 2 * 2, bgr.shape[1] // 2 * 2
+    image = bgr[:height, :width].astype(np.float32)
+    diagonal = (image[0::2, 0::2] - image[0::2, 1::2] - image[1::2, 0::2] + image[1::2, 1::2]) / 2
+    sigmas = np.median(np.abs(diagonal), axis=(0, 1)) / HAAR_MAD_SCALE
+    return float(np.sqrt(np.mean(sigmas**2)))
+
+
+def resampling_peak(gray, axis):
+    """Частота и выраженность главного пика спектра профиля второй производной вдоль оси.
+
+    Увеличение размера в s раз делает вторую производную периодической с периодом s пикселей.
+    """
+    profile = np.abs(np.diff(gray, n=2, axis=axis)).mean(axis=1 - axis)
+    spectrum = np.abs(np.fft.rfft(profile - profile.mean()))
+    frequencies = np.fft.rfftfreq(profile.size)
+    band = frequencies >= RESAMPLE_MIN_FREQUENCY
+    top = int(np.argmax(spectrum[band]))
+    return float(frequencies[band][top]), float(spectrum[band][top] / (np.median(spectrum[band]) + EPS))
+
+
+def psnr(first, second):
+    """PSNR двух изображений в дБ; для совпадающих изображений ограничен сверху."""
+    mse = float(np.mean((first - second) ** 2))
+    return 20 * np.log10(PSNR_PEAK / np.sqrt(max(mse, NOISE_SIGMA_FLOOR**2)))
+
+
+def distortion_features(bgr, gray):
+    """Признаки, нацеленные на варианты, которые хуже всего описывались остальными группами.
+
+    Изменение контраста — гистограмма; слабый шум — оценка σ и PSNR, который дал бы аддитивный шум
+    с такой σ; уменьшение и обратное увеличение размера — периодичность второй производной и PSNR
+    повторного уменьшения и увеличения: у уже уменьшенного изображения он выше.
+    """
+    sigma = haar_noise_sigma(bgr)
+    features = {
+        **histogram_features(bgr),
+        "dist_noise_sigma": sigma,
+        "dist_noise_psnr": 20 * np.log10(PSNR_PEAK / max(sigma, NOISE_SIGMA_FLOOR)),
+    }
+    for axis, name in ((1, "rows"), (0, "columns")):
+        frequency, peak = resampling_peak(gray, axis)
+        features[f"dist_resample_frequency_{name}"] = frequency
+        features[f"dist_resample_peak_{name}"] = peak
+    height, width = gray.shape
+    for scale in RESIZE_SCALES:
+        small = cv2.resize(gray, (round(width / scale), round(height / scale)), interpolation=cv2.INTER_AREA)
+        restored = cv2.resize(small, (width, height), interpolation=cv2.INTER_LINEAR)
+        features[f"dist_resize_psnr_s{scale}"] = psnr(gray, restored)
+    return features
+
+
 def image_features(bgr):
     """Считает все признаки для одного изображения в формате BGR."""
     gray = cv2.cvtColor(bgr, cv2.COLOR_BGR2GRAY).astype(np.float32)
@@ -297,6 +390,7 @@ def image_features(bgr):
         **spectral_features(gray),
         **nss_features(gray),
         **texture_features(gray),
+        **distortion_features(bgr, gray),
     }
 
 

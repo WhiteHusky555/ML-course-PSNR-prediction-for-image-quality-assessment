@@ -7,8 +7,8 @@ import pytest
 from main import prepare_feature_table
 from src.features import extract_features, find_images, image_features
 
-GROUPS = ("color", "sharp", "noise", "comp", "spectrum", "nss", "texture")
-N_FEATURES = 141
+GROUPS = ("color", "sharp", "noise", "comp", "spectrum", "nss", "texture", "dist")
+N_FEATURES = 155
 
 
 @pytest.fixture(scope="module")
@@ -45,6 +45,34 @@ def test_compression_raises_blockiness(base_image, clean):
     encoded = cv2.imencode(".jpg", base_image, [cv2.IMWRITE_JPEG_QUALITY, 10])[1]
     compressed = cv2.imdecode(encoded, cv2.IMREAD_COLOR)
     assert image_features(compressed)["comp_block8_horizontal"] > clean["comp_block8_horizontal"]
+
+
+def test_contrast_stretch_leaves_gaps_in_histogram():
+    # Фикстура уже растянута нормализацией, поэтому здесь нужна сцена с гладкой гистограммой.
+    rng = np.random.default_rng(2)
+    field = cv2.GaussianBlur(rng.normal(size=(480, 640, 3)).astype(np.float32), (0, 0), 3)
+    smooth = np.clip(np.round(127.5 + 40 * field / field.std()), 0, 255).astype(np.uint8)
+    stretched = np.clip(1.4 * smooth.astype(np.float32) - 50, 0, 255).astype(np.uint8)
+    before, after = image_features(smooth), image_features(stretched)
+    assert after["dist_hist_empty"] > before["dist_hist_empty"] + 0.2
+    assert after["dist_hist_roughness"] > before["dist_hist_roughness"]
+    assert after["dist_distinct_share"] < before["dist_distinct_share"]
+
+
+def test_noise_sigma_matches_added_gaussian_noise(base_image):
+    rng = np.random.default_rng(1)
+    noisy = np.clip(base_image + rng.normal(0, 10, base_image.shape), 0, 255).astype(np.uint8)
+    features = image_features(noisy)
+    assert features["dist_noise_sigma"] == pytest.approx(10, rel=0.15)
+    assert features["dist_noise_psnr"] == pytest.approx(20 * np.log10(255 / features["dist_noise_sigma"]))
+
+
+def test_resize_roundtrip_leaves_periodic_trace(base_image, clean):
+    small = cv2.resize(base_image, (640 // 3, 480 // 3), interpolation=cv2.INTER_AREA)
+    resized = image_features(cv2.resize(small, (640, 480), interpolation=cv2.INTER_LINEAR))
+    assert resized["dist_resample_frequency_rows"] == pytest.approx(1 / 3, abs=0.01)
+    assert resized["dist_resample_peak_rows"] > clean["dist_resample_peak_rows"]
+    assert resized["dist_resize_psnr_s3"] > clean["dist_resize_psnr_s3"]
 
 
 def test_constant_image_gives_finite_features(base_image, clean):
