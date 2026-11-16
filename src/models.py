@@ -16,6 +16,7 @@ from sklearn.tree import DecisionTreeRegressor
 from xgboost import XGBRegressor
 
 from src.cnn import ImageCNNRegressor
+from src.ensemble import PREDICTION_PREFIX, WeightedBlend
 from src.neural import MLPRegressor
 from src.preprocessing import CorrelationFilter, QuantileClipper
 
@@ -35,6 +36,7 @@ MODEL_TYPES = {
     "catboost": CatBoostRegressor,
     "mlp": MLPRegressor,
     "cnn": ImageCNNRegressor,
+    "blend": WeightedBlend,
 }
 SCALERS = {
     "standard": StandardScaler,
@@ -107,10 +109,13 @@ def uses_images(spec):
 def model_columns(spec, columns):
     """Столбцы, которые подаются модели: признаки и, если задано кодирование, номер варианта.
 
-    Моделям на изображениях подаётся только имя файла, изображение они читают сами.
+    Моделям на изображениях подаётся только имя файла, изображение они читают сами. В ансамбле
+    при inputs: predictions модель получает только прогнозы базовых моделей, без признаков.
     """
     if uses_images(spec):
         return [IMAGE_COLUMN]
+    if spec.get("inputs") == "predictions":
+        return [column for column in columns if column.startswith(PREDICTION_PREFIX)]
     return [*columns, VARIANT_COLUMN] if "variant" in spec else list(columns)
 
 

@@ -385,6 +385,16 @@ python main.py --config experiments/cnn.yaml
 python benchmark_precision.py --images-dir data
 ```
 
+Ансамбль строится в два шага: сначала модели на признаках сохраняют out-of-fold прогнозы и прогнозы на test в `outputs/ensemble_base`, затем ансамбль объединяет их с прогнозами свёрточных сетей из `runs/09-cnn`:
+
+```bash
+python main.py --config experiments/ensemble_base.yaml
+```
+
+```bash
+python main.py --config experiments/ensemble.yaml
+```
+
 Для пересчёта признаков нужны изображения (9,5 ГБ):
 
 ```bash
@@ -428,5 +438,6 @@ python -m pytest
 | `src/tuning.py` | подбор гиперпараметров с помощью Optuna |
 | `src/neural.py` | полносвязная нейросеть на Keras и общий цикл обучения сетей |
 | `src/cnn.py` | свёрточная нейросеть на изображениях |
+| `src/ensemble.py` | ансамбль из прогнозов базовых моделей |
 | `tests/` | тесты на синтетических данных и изображениях |
 | `runs/` | логи и результаты прогонов на Kaggle с пояснениями |

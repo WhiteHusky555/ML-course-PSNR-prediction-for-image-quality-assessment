@@ -6,6 +6,7 @@ import pandas as pd
 
 from src.config import load_config
 from src.data import attach_features, check_feature_table, feature_columns, load_data
+from src.ensemble import read_predictions
 from src.features import extract_features
 from src.models import build_model, expand_grid, model_columns, uses_images
 from src.tuning import tune_models
@@ -25,6 +26,21 @@ def prepare_feature_table(features_config, names, id_column):
         table = pd.read_csv(path)
     check_feature_table(table, names, id_column)
     return table
+
+
+def attach_predictions(train, test, files, id_column):
+    """Добавляет прогнозы базовых моделей как столбцы для ансамбля: out-of-fold на train, прогнозы на test.
+
+    Out-of-fold прогнозы должны быть получены на тех же фолдах, на которых оценивается ансамбль:
+    тогда прогноз каждой строки train сделан моделью, которая эту строку не видела.
+    """
+    oof, test_predictions = read_predictions(files, id_column)
+    train = train.merge(oof, on=id_column, how="left", validate="one_to_one")
+    test = test.merge(test_predictions, on=id_column, how="left", validate="one_to_one")
+    added = [column for column in oof.columns if column != id_column]
+    if train[added].isna().any().any() or test[added].isna().any().any():
+        raise ValueError("Прогнозы базовых моделей есть не для всех изображений train или test")
+    return train, test
 
 
 def config_folds(config, train, target, seed):
@@ -80,6 +96,8 @@ def run(config):
     table = prepare_feature_table(config["features"], names, id_column)
     train = attach_features(train, table, id_column)
     test = attach_features(test, table, id_column)
+    if "predictions" in config:
+        train, test = attach_predictions(train, test, config["predictions"], id_column)
     columns = feature_columns(train, id_column, target)
 
     output_dir = Path(config["output"]["dir"])

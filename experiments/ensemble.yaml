@@ -1,0 +1,63 @@
+data:
+  dir: data
+  train_file: train.csv
+  test_file: sample_submission.csv
+  id_column: img_name
+  target: PSNR
+
+features:
+  table: features/features.csv.gz
+  recompute: false
+  images_dir: data
+
+# Те же фолды, на которых получены out-of-fold прогнозы базовых моделей.
+validation:
+  n_splits: 5
+  n_bins: 10
+  seed: 42
+
+# Пары файлов: out-of-fold прогнозы на train и средние прогнозы моделей фолдов на test.
+# Прогнозы моделей на признаках получаются запуском experiments/ensemble_base.yaml.
+predictions:
+  - oof: outputs/ensemble_base/oof_predictions.csv
+    test: outputs/ensemble_base/test_predictions.csv
+  - oof: runs/09-cnn/oof_efficientnet.csv
+    test: runs/09-cnn/test_efficientnet.csv
+  - oof: runs/09-cnn/oof_efficientnet_crop.csv
+    test: runs/09-cnn/test_efficientnet_crop.csv
+
+# inputs: predictions — модель получает только прогнозы базовых моделей; без inputs — прогнозы и все признаки.
+# Стекинг на прогнозах и признаках может по признакам изображения понять, какой модели доверять:
+# например, сети на размытии и сжатии, бустингу на шуме.
+stacking: &stacking
+  objective: l1
+  n_estimators: 1000
+  learning_rate: 0.02
+  num_leaves: 15
+  min_child_samples: 50
+  subsample: 0.8
+  subsample_freq: 1
+  colsample_bytree: 0.7
+  random_state: 0
+  n_jobs: -1
+  verbose: -1
+
+models:
+  mean:
+    type: blend
+    inputs: predictions
+    params:
+      equal: true
+  weights:
+    type: blend
+    inputs: predictions
+  stacking_predictions:
+    type: lightgbm
+    inputs: predictions
+    params: *stacking
+  stacking_features:
+    type: lightgbm
+    params: *stacking
+
+output:
+  dir: outputs/ensemble
