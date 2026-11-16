@@ -1,0 +1,16 @@
+{
+  "ref": 58445233,
+  "total_bytes": "104102",
+  "date": "2026-11-16T21:28:45.063Z",
+  "description": "Stacking LightGBM on OOF predictions of 5 models with 155 pixel features and 2 EfficientNetB0; CV MAE 0.450787; feature code 1e4a44f; run 11",
+  "file_name": "submission.csv",
+  "public_score": "0.41641",
+  "private_score": "0.41627",
+  "status": "COMPLETE",
+  "submitted_by": "dxdfai",
+  "submitted_by_ref": "dxdfai",
+  "team_name": "dx df ai",
+  "url": "/submissions/58445233/58445233.raw",
+  "local_file": "outputs/ensemble/submission.csv",
+  "sha256": "4b11d2c3f7aadbaca4fff555b055972496d367d6d971e11da8e2778c100a12de"
+}
