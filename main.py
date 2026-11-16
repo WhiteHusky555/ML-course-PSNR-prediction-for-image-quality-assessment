@@ -5,6 +5,7 @@ from pathlib import Path
 import pandas as pd
 
 from src.config import load_config
+from src.combinations import add_combinations
 from src.data import attach_features, check_feature_table, feature_columns, load_data
 from src.ensemble import read_predictions
 from src.features import extract_features
@@ -25,6 +26,12 @@ def prepare_feature_table(features_config, names, id_column):
     else:
         table = pd.read_csv(path)
     check_feature_table(table, names, id_column)
+    combinations = features_config.get("combinations", False)
+    if not isinstance(combinations, bool):
+        raise ValueError("features.combinations должен быть true или false")
+    if combinations:
+        table = add_combinations(table)
+        check_feature_table(table, names, id_column)
     return table
 
 
