@@ -1,0 +1,52 @@
+data:
+  dir: /kaggle/input/psnr-iqa
+  train_file: train.csv
+  test_file: sample_submission.csv
+  id_column: img_name
+  target: PSNR
+features:
+  table: /kaggle/working/repo/features/features.csv.gz
+  recompute: false
+  images_dir: data
+  combinations: true
+validation:
+  n_splits: 5
+  n_bins: 10
+  seed: 42
+predictions:
+- oof: /kaggle/working/outputs/combinations/ensemble_base/oof_predictions.csv
+  test: /kaggle/working/outputs/combinations/ensemble_base/test_predictions.csv
+- oof: /kaggle/working/repo/runs/09-cnn/oof_efficientnet.csv
+  test: /kaggle/working/repo/runs/09-cnn/test_efficientnet.csv
+- oof: /kaggle/working/repo/runs/09-cnn/oof_efficientnet_crop.csv
+  test: /kaggle/working/repo/runs/09-cnn/test_efficientnet_crop.csv
+stacking: &id001
+  objective: l1
+  n_estimators: 1000
+  learning_rate: 0.02
+  num_leaves: 15
+  min_child_samples: 50
+  subsample: 0.8
+  subsample_freq: 1
+  colsample_bytree: 0.7
+  random_state: 0
+  n_jobs: -1
+  verbose: -1
+models:
+  mean:
+    type: blend
+    inputs: predictions
+    params:
+      equal: true
+  weights:
+    type: blend
+    inputs: predictions
+  stacking_predictions:
+    type: lightgbm
+    inputs: predictions
+    params: *id001
+  stacking_features:
+    type: lightgbm
+    params: *id001
+output:
+  dir: /kaggle/working/outputs/combinations/ensemble

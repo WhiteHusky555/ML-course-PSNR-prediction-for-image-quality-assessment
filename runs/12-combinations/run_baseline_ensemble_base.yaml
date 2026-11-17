@@ -1,0 +1,95 @@
+data:
+  dir: /kaggle/input/psnr-iqa
+  train_file: train.csv
+  test_file: sample_submission.csv
+  id_column: img_name
+  target: PSNR
+features:
+  table: /kaggle/working/repo/features/features.csv.gz
+  recompute: false
+  images_dir: data
+  combinations: false
+validation:
+  n_splits: 5
+  n_bins: 10
+  seed: 42
+models:
+  lightgbm:
+    type: lightgbm
+    params:
+      objective: l1
+      num_leaves: 63
+      n_estimators: 2000
+      learning_rate: 0.02
+      subsample: 0.8
+      subsample_freq: 1
+      colsample_bytree: 0.7
+      random_state: 0
+      n_jobs: -1
+      verbose: -1
+  xgboost:
+    type: xgboost
+    center_target: true
+    params:
+      objective: reg:absoluteerror
+      max_depth: 8
+      n_estimators: 2000
+      learning_rate: 0.02
+      subsample: 0.8
+      colsample_bytree: 0.7
+      tree_method: hist
+      random_state: 0
+      n_jobs: -1
+  catboost:
+    type: catboost
+    center_target: true
+    params:
+      loss_function: MAE
+      depth: 6
+      iterations: 2000
+      learning_rate: 0.05
+      random_seed: 0
+      thread_count: -1
+      verbose: 0
+      allow_writing_files: false
+  mlp_silu:
+    type: mlp
+    clip:
+    - 0.001
+    - 0.999
+    scaler: standard
+    params:
+      hidden_units: &id001
+      - 256
+      - 128
+      - 64
+      activation: silu
+      batch_norm: true
+      dropout: 0.2
+      optimizer: adam
+      learning_rate: 0.001
+      scheduler: cosine
+      batch_size: 256
+      epochs: 100
+      loss: mae
+      random_state: 0
+  mlp_elu:
+    type: mlp
+    clip:
+    - 0.001
+    - 0.999
+    scaler: standard
+    params:
+      hidden_units: *id001
+      activation: elu
+      batch_norm: true
+      dropout: 0.1
+      optimizer: adam
+      learning_rate: 0.001
+      scheduler: cosine
+      batch_size: 256
+      epochs: 100
+      loss: mae
+      random_state: 0
+output:
+  dir: /kaggle/working/outputs/baseline/ensemble_base

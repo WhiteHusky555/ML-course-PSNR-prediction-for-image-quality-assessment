@@ -1,0 +1,21 @@
+{
+  "kernel": "dxdfai/psnr-iqa-feature-combinations",
+  "kernel_id": 145480052,
+  "version": 4,
+  "commit": "027872888f07a2c84f1fc2f26f6dacea5949d773",
+  "runner_sha256": "96cb4b46f7cecfb5843a3819b9471b8ebf05647d50b75a698f468e25d9febd13",
+  "url": "https://www.kaggle.com/code/dxdfai/psnr-iqa-feature-combinations",
+  "accelerator": "CPU",
+  "docker_image": "gcr.io/kaggle-images/python@sha256:0717e81990be591f8c5f98f033d29ab23e9ffde057e5b3a6bd4371f93969e962",
+  "competition_data_sources": [
+    "psnr-iqa"
+  ],
+  "input_verified": "/kaggle/input/psnr-iqa",
+  "launch_method": "official Kaggle CLI through system proxy",
+  "launcher_tests_passed": 3,
+  "previous_versions": {
+    "1": "failed: competition input not attached by MCP save_notebook",
+    "2": "QuickSave diagnostic: input still absent",
+    "3": "QuickSave via CLI: competition input attached"
+  }
+}

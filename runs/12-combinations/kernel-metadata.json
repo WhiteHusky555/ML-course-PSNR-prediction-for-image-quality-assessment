@@ -1,0 +1,19 @@
+{
+  "id": "dxdfai/psnr-iqa-feature-combinations",
+  "title": "PSNR IQA Feature Combinations",
+  "code_file": "run_combinations.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_tpu": false,
+  "enable_internet": true,
+  "dataset_sources": [],
+  "competition_sources": [
+    "psnr-iqa"
+  ],
+  "kernel_sources": [],
+  "model_sources": [],
+  "id_no": 145480052,
+  "docker_image": "gcr.io/kaggle-images/python@sha256:0717e81990be591f8c5f98f033d29ab23e9ffde057e5b3a6bd4371f93969e962"
+}
