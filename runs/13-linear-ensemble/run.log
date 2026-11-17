@@ -1,0 +1,47 @@
+== baseline
+stacking_linear: MAE 0.5093
+stacking_ridge alpha=0.01: MAE 0.5093
+stacking_ridge alpha=0.1: MAE 0.5093
+stacking_ridge alpha=1.0: MAE 0.5093
+stacking_ridge alpha=10.0: MAE 0.5089
+stacking_ridge alpha=100.0: MAE 0.5065
+stacking_ridge alpha=1000.0: MAE 0.5060
+mean: MAE 0.5645
+weights: MAE 0.4847
+stacking_predictions: MAE 0.4509
+stacking_features: MAE 0.4540
+== combinations
+stacking_linear: MAE 0.5088
+stacking_ridge alpha=0.01: MAE 0.5088
+stacking_ridge alpha=0.1: MAE 0.5088
+stacking_ridge alpha=1.0: MAE 0.5088
+stacking_ridge alpha=10.0: MAE 0.5084
+stacking_ridge alpha=100.0: MAE 0.5061
+stacking_ridge alpha=1000.0: MAE 0.5060
+mean: MAE 0.5648
+weights: MAE 0.4846
+stacking_predictions: MAE 0.4506
+stacking_features: MAE 0.4533
+ features                       model      mae  fold_std
+      155        stacking_predictions 0.450888  0.018605
+      155           stacking_features 0.454017  0.017708
+      155                     weights 0.484687  0.018481
+      155 stacking_ridge alpha=1000.0 0.505995  0.010637
+      155  stacking_ridge alpha=100.0 0.506488  0.012044
+      155   stacking_ridge alpha=10.0 0.508917  0.012619
+      155    stacking_ridge alpha=1.0 0.509299  0.012697
+      155    stacking_ridge alpha=0.1 0.509339  0.012705
+      155   stacking_ridge alpha=0.01 0.509343  0.012706
+      155             stacking_linear 0.509343  0.012706
+      155                        mean 0.564532  0.010835
+      167        stacking_predictions 0.450595  0.017148
+      167           stacking_features 0.453344  0.016950
+      167                     weights 0.484588  0.018467
+      167 stacking_ridge alpha=1000.0 0.506030  0.011056
+      167  stacking_ridge alpha=100.0 0.506125  0.012080
+      167   stacking_ridge alpha=10.0 0.508407  0.012312
+      167    stacking_ridge alpha=1.0 0.508765  0.012354
+      167    stacking_ridge alpha=0.1 0.508802  0.012358
+      167   stacking_ridge alpha=0.01 0.508806  0.012358
+      167             stacking_linear 0.508806  0.012358
+      167                        mean 0.564770  0.010654

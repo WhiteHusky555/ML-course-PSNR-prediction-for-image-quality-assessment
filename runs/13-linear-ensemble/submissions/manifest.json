@@ -1,0 +1,28 @@
+[
+  {
+    "arm": "baseline",
+    "features": 155,
+    "model": "stacking_ridge alpha=1000.0",
+    "file": "ridge_155.csv",
+    "sha256": "c65cf43040efa61bef9f0d93ccc5f8720687605dbfc4c20eb876a8f045cff160",
+    "rows": 3310,
+    "submission_ref": 58462179,
+    "public_score": "0.46667",
+    "private_score": "0.47736",
+    "status": "COMPLETE",
+    "date": "2026-11-17T08:16:14.720Z"
+  },
+  {
+    "arm": "combinations",
+    "features": 167,
+    "model": "stacking_ridge alpha=1000.0",
+    "file": "ridge_167.csv",
+    "sha256": "c3398f74db28b1f420a691c282d550e0dd6098169b90cd61dc96a8817b4dd0eb",
+    "rows": 3310,
+    "submission_ref": 58462231,
+    "public_score": "0.46523",
+    "private_score": "0.47504",
+    "status": "COMPLETE",
+    "date": "2026-11-17T08:18:25.153Z"
+  }
+]

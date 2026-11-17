@@ -1,0 +1,8 @@
+{
+  "runs\\12-combinations\\outputs\\combinations\\ensemble_base\\oof_predictions.csv": "94471ecf6acb872c620f99a76945b6b88d124280b5fceef6a0a0b753d598b701",
+  "runs\\12-combinations\\outputs\\combinations\\ensemble_base\\test_predictions.csv": "eb16631463ee859c2f9bcf2491d0db74b5cbc42d48b17b3abff23b3c564c2f69",
+  "runs\\09-cnn\\oof_efficientnet.csv": "cec78960ae437e52734e300a4f04d93f2e644287ab0723e7a2b3ac7ac33e51ef",
+  "runs\\09-cnn\\test_efficientnet.csv": "a1e0eab39b855ebea45eddaab18581d0d69d73dd263c53e98fd60b49aba67b5e",
+  "runs\\09-cnn\\oof_efficientnet_crop.csv": "5dd80bf6495b2e7125d7cc9897893b17763b222fa3690595f731a59a19cad9bc",
+  "runs\\09-cnn\\test_efficientnet_crop.csv": "f76695e2e2bf14b27f4532bb154249759c926dbce7af0fab06ec2a92192b91f9"
+}

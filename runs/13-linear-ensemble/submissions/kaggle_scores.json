@@ -1,0 +1,30 @@
+[
+  {
+    "ref": 58462179,
+    "total_bytes": "107355",
+    "date": "2026-11-17T08:16:14.720Z",
+    "description": "Run 13: Ridge alpha=1000, seven OOF predictors, base models on 155 features, mean of five meta-fold models; CV MAE 0.505995",
+    "file_name": "ridge_155.csv",
+    "public_score": "0.46667",
+    "private_score": "0.47736",
+    "status": "COMPLETE",
+    "submitted_by": "dxdfai",
+    "submitted_by_ref": "dxdfai",
+    "team_name": "dx df ai",
+    "url": "/submissions/58462179/58462179.raw"
+  },
+  {
+    "ref": 58462231,
+    "total_bytes": "107350",
+    "date": "2026-11-17T08:18:25.153Z",
+    "description": "Run 13: Ridge alpha=1000, seven OOF predictors, base models on 167 features, mean of five meta-fold models; CV MAE 0.506030",
+    "file_name": "ridge_167.csv",
+    "public_score": "0.46523",
+    "private_score": "0.47504",
+    "status": "COMPLETE",
+    "submitted_by": "dxdfai",
+    "submitted_by_ref": "dxdfai",
+    "team_name": "dx df ai",
+    "url": "/submissions/58462231/58462231.raw"
+  }
+]
