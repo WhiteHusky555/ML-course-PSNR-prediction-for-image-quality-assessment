@@ -1,0 +1,12 @@
+model,inputs,mae,fold_std,source
+Медиана,константа,1.02596865375704,0.018641048052923,01-baseline/results_main.csv
+CNN с нуля,пиксели,0.8112399527085903,0.0126523607975299,09-cnn/results_cnn_small.csv
+Lasso,141,0.8000278464238809,0.0130421281967447,04-preprocessing/results_main.csv
+KNN,141,0.7473634135554927,0.0080190134004836,05-knn-tree-forest/results_main.csv
+Random Forest,141,0.6883013630172473,0.0044697964514678,05-knn-tree-forest/results_main.csv
+Voting,155,0.687947759576217,0.006434104785286,14-voting/results.csv
+MLP SiLU,141,0.6517770136603545,0.0096597809467916,08-mlp/results_mlp.csv
+LightGBM Optuna,141; seed 43–45,0.6445553566687124,0.0195574603825022,07-tuning/results_tuning.csv
+"EfficientNetB0, вырезки",пиксели,0.578264583583104,0.0125068971503134,09-cnn/results_efficientnet_crop.csv
+"EfficientNetB0, целый кадр",пиксели,0.4929957822148597,0.0208071900885518,09-cnn/results_efficientnet.csv
+LightGBM-стекинг,155 + CNN,0.4507870040667601,0.0180953302325905,11-features/results_ensemble.csv
