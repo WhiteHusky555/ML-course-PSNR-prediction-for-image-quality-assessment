@@ -1,0 +1,26 @@
+{
+  "features": "features/features.csv.gz",
+  "train": "runs/11-features/oof_base.csv",
+  "test": "runs/11-features/test_base.csv",
+  "validation": {
+    "n_splits": 5,
+    "n_bins": 10,
+    "seed": 42
+  },
+  "ridge": {
+    "alpha": 1
+  },
+  "tree": {
+    "max_depth": 10,
+    "min_samples_leaf": 5,
+    "random_state": 42
+  },
+  "histgb": {
+    "loss": "absolute_error",
+    "max_iter": 200,
+    "max_leaf_nodes": 15,
+    "learning_rate": 0.1,
+    "early_stopping": false,
+    "random_state": 42
+  }
+}
