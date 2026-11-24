@@ -16,6 +16,8 @@
 | [08-mlp](08-mlp) | полносвязная нейросеть на Keras: 35 сетей по пунктам чек-листа | 60 | 1,5 ч | MLP 0,652 | [bd8538b](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/commit/bd8538b) |
 | [09-cnn](09-cnn) | свёрточные сети на изображениях: сеть с нуля и EfficientNetB0 на целых изображениях и на вырезках, сравнение float32 и смешанной точности; пять прогонов на GPU, логи в отдельных файлах | 69 | 6,6 ч | EfficientNetB0 0,493 | [bacbf68](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/commit/bacbf68) |
 | [10-ensemble](10-ensemble) | ансамбль из прогнозов моделей на признаках и свёрточных сетей: среднее, взвешенное среднее, стекинг | 81 | 21 мин | стекинг на прогнозах 0,461 | [94f1df6](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/commit/94f1df6) |
+| [11-features](11-features) | добавлены 14 признаков искажений, пересчитаны признаки для 16 520 изображений | 84 | 6 мин на анализ, 66 мин на основной запуск | стекинг на 155 признаках: CV MAE 0,450787 | [1e4a44f](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/commit/1e4a44f) |
+| [12-combinations](12-combinations) | парное сравнение 155 и 167 признаков на одних и тех же пяти фолдах | 89 | 39 мин | CV MAE стекинга 0,450888 → 0,450595; улучшение на трёх фолдах из пяти | [0278728](https://github.com/WhiteHusky555/ML-course-PSNR-prediction-for-image-quality-assessment/commit/0278728) |
 
 Во всех проверочных прогонах сверка признаков дала одинаковый результат: наибольшее относительное расхождение 5·10⁻⁷. Код `src/features.py` воспроизводит таблицу признаков с точностью до округления до 7 значащих цифр.
 
