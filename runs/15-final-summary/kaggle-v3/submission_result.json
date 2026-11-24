@@ -1,0 +1,14 @@
+{
+  "ref": 58765896,
+  "date": "2026-11-23T07:14:52.377Z",
+  "public_score": "0.41615",
+  "private_score": "0.41949",
+  "status": "COMPLETE",
+  "total_bytes": "104024",
+  "notebook_version": 3,
+  "device": "Tesla T4",
+  "elapsed_seconds": 32109.78789535,
+  "cv_mae": 0.45603420685648305,
+  "rows": 3310,
+  "sha256": "9266afc39d8f5b1561c8de65b31e00ed8e15f5299938682a68f860b0eb9615b7"
+}

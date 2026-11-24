@@ -1,0 +1,6 @@
+{
+  "target_mean": 28.8382511138916,
+  "target_std": 1.771826148033142,
+  "sha256": "12cfa2d54c02e34cc9a6ddc6cac8de838e71f7ca20b1fd290c59ad4188cc38a8",
+  "fold_mae": 0.5881896441240958
+}

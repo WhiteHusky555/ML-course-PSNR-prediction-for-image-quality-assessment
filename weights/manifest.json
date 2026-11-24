@@ -1,0 +1,155 @@
+{
+  "notebook": "dxdfai/psnr-iqa-neural-weights",
+  "version": 1,
+  "competition": "psnr-iqa",
+  "keras_version": "3.13.2",
+  "folds": 5,
+  "scores_cv_mae": {
+    "mlp_silu": 0.6372695589176972,
+    "mlp_elu": 0.6357577869418654,
+    "cnn_efficientnet": 0.4932552300178821,
+    "cnn_efficientnet_crop": 0.5847376597703349
+  },
+  "checkpoints": [
+    {
+      "model": "mlp_silu/fold_1.keras",
+      "preprocessing": "mlp_silu/fold_1.json",
+      "sha256": "357864815e3b21f009f5c79bdfa2864cae8419ab149b3beb4b63519ac8658ea0",
+      "size_bytes": 377461,
+      "fold_mae": 0.6271144299366129
+    },
+    {
+      "model": "mlp_silu/fold_2.keras",
+      "preprocessing": "mlp_silu/fold_2.json",
+      "sha256": "b87f46e39e7415aeb0dcc2d7b0766be458cdd1c2003e0a9e218360da21331aff",
+      "size_bytes": 377461,
+      "fold_mae": 0.6485535983234033
+    },
+    {
+      "model": "mlp_silu/fold_3.keras",
+      "preprocessing": "mlp_silu/fold_3.json",
+      "sha256": "2ca1242976dd6c20cf7debed9924eb154110ef0cba01c84c809a57b08dfafa5a",
+      "size_bytes": 377461,
+      "fold_mae": 0.6295297033075306
+    },
+    {
+      "model": "mlp_silu/fold_4.keras",
+      "preprocessing": "mlp_silu/fold_4.json",
+      "sha256": "7ac52c9cde469c559639d8bb18c312451fad432a7dedd01fc903c4c33be69fb7",
+      "size_bytes": 377461,
+      "fold_mae": 0.6357977426723148
+    },
+    {
+      "model": "mlp_silu/fold_5.keras",
+      "preprocessing": "mlp_silu/fold_5.json",
+      "sha256": "94ee20960d524bf9b81cbf67cbf3ae36a70851bd338f6c9f8288c1140a9b8055",
+      "size_bytes": 377461,
+      "fold_mae": 0.6453456078793146
+    },
+    {
+      "model": "mlp_elu/fold_1.keras",
+      "preprocessing": "mlp_elu/fold_1.json",
+      "sha256": "ba25ead32b27d0b3ffde6675924826ae2889a9622dc8a4b0c4a794c076369fac",
+      "size_bytes": 377458,
+      "fold_mae": 0.6247768053106607
+    },
+    {
+      "model": "mlp_elu/fold_2.keras",
+      "preprocessing": "mlp_elu/fold_2.json",
+      "sha256": "b56d9c651aa512d2dfd23df7a9b3131b6281b8ba45c8c6f9d96da6b424eea64a",
+      "size_bytes": 377458,
+      "fold_mae": 0.6420658634643627
+    },
+    {
+      "model": "mlp_elu/fold_3.keras",
+      "preprocessing": "mlp_elu/fold_3.json",
+      "sha256": "efd61997591ec826bd97af051a52eefd9d484057cddce0bc2752f0a0fba3e6db",
+      "size_bytes": 377458,
+      "fold_mae": 0.6314837846267903
+    },
+    {
+      "model": "mlp_elu/fold_4.keras",
+      "preprocessing": "mlp_elu/fold_4.json",
+      "sha256": "622cf0154b09ac1ad9650015f0c7622b4d5648c731b26aad735abe2dafd17258",
+      "size_bytes": 377458,
+      "fold_mae": 0.638753515383825
+    },
+    {
+      "model": "mlp_elu/fold_5.keras",
+      "preprocessing": "mlp_elu/fold_5.json",
+      "sha256": "8d9f415e8af3faa1bd523a614ccb0e3994a19f2db735b3b6fb89c59211d273eb",
+      "size_bytes": 377458,
+      "fold_mae": 0.641705113510416
+    },
+    {
+      "model": "cnn_efficientnet/fold_1.keras",
+      "preprocessing": "cnn_efficientnet/fold_1.json",
+      "sha256": "203fc4f9a180fd0f097f090ff669129aa89a0586192800264a2f5553ca5befee",
+      "size_bytes": 17043100,
+      "fold_mae": 0.47739936836660524
+    },
+    {
+      "model": "cnn_efficientnet/fold_2.keras",
+      "preprocessing": "cnn_efficientnet/fold_2.json",
+      "sha256": "4ee50e1079ce14c2b73025586f6365d5458c6622c86e327eb230dc648dcfce17",
+      "size_bytes": 17043100,
+      "fold_mae": 0.4958907258980404
+    },
+    {
+      "model": "cnn_efficientnet/fold_3.keras",
+      "preprocessing": "cnn_efficientnet/fold_3.json",
+      "sha256": "b444fabc6b6867c53a1c5cdf9f7173aaa01612241919991d374e3a070cc0a1cd",
+      "size_bytes": 17043100,
+      "fold_mae": 0.47058356303889926
+    },
+    {
+      "model": "cnn_efficientnet/fold_4.keras",
+      "preprocessing": "cnn_efficientnet/fold_4.json",
+      "sha256": "2222bb28712be62111faa1b92fc3c80903993f8dfbc1e1966681c0447c8557e7",
+      "size_bytes": 17043100,
+      "fold_mae": 0.5051249681387425
+    },
+    {
+      "model": "cnn_efficientnet/fold_5.keras",
+      "preprocessing": "cnn_efficientnet/fold_5.json",
+      "sha256": "992ed64ec6c1b5796b5bfb8c6c1e302b0458bfe487a4191b030175fc958b0741",
+      "size_bytes": 17043100,
+      "fold_mae": 0.5173154719408706
+    },
+    {
+      "model": "cnn_efficientnet_crop/fold_1.keras",
+      "preprocessing": "cnn_efficientnet_crop/fold_1.json",
+      "sha256": "33ac67d91def624b58644d7cb43a4802a975554920f8551e699b6f7fb750530a",
+      "size_bytes": 17043100,
+      "fold_mae": 0.568230958116762
+    },
+    {
+      "model": "cnn_efficientnet_crop/fold_2.keras",
+      "preprocessing": "cnn_efficientnet_crop/fold_2.json",
+      "sha256": "12cfa2d54c02e34cc9a6ddc6cac8de838e71f7ca20b1fd290c59ad4188cc38a8",
+      "size_bytes": 17043100,
+      "fold_mae": 0.5881896441240958
+    },
+    {
+      "model": "cnn_efficientnet_crop/fold_3.keras",
+      "preprocessing": "cnn_efficientnet_crop/fold_3.json",
+      "sha256": "1200166a6ba34050d6827325f5d81fd6da80a30e5eb00af508d21b96aa6b56f3",
+      "size_bytes": 17043100,
+      "fold_mae": 0.577776269852677
+    },
+    {
+      "model": "cnn_efficientnet_crop/fold_4.keras",
+      "preprocessing": "cnn_efficientnet_crop/fold_4.json",
+      "sha256": "db6918af9c95fcc7859071b33e69cba110fe823776dcbff682cdc15d079967ac",
+      "size_bytes": 17043100,
+      "fold_mae": 0.5742974282117599
+    },
+    {
+      "model": "cnn_efficientnet_crop/fold_5.keras",
+      "preprocessing": "cnn_efficientnet_crop/fold_5.json",
+      "sha256": "33685d2ba119b991cd9fbc055055b6a78ec9c3664c6a5ebfe25a16e1dfd6233d",
+      "size_bytes": 17043100,
+      "fold_mae": 0.6152006451478265
+    }
+  ]
+}
